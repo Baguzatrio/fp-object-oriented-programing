@@ -1,27 +1,50 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package gui;
 
-import gui.base.BaseDataFrame;
+/**
+ *
+ * @author ASUS
+ */
+//
 import db.Koneksi;
+
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ProduksiFrame extends BaseDataFrame {
-    
+public class ProduksiFrame extends JFrame {
+    private JTable table;
+    private DefaultTableModel tableModel;
+
     public ProduksiFrame() {
-        super("Produksi & Pengemasan", 
-              new String[]{"ID", "Tanggal", "Produk", "Jumlah Batch", "Total Kg", "Jumlah Kemasan"});
+        setTitle("Produksi & Pengemasan");
+        setSize(700, 400);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        initComponents();
+        loadProduksi();
     }
-    
-    @Override
-    protected String getAddButtonText() {
-        return "Input Produksi";
+
+    private void initComponents() {
+        String[] kolom = {"ID", "Tanggal", "Produk", "Jumlah Batch", "Total Kg", "Jumlah Kemasan"};
+        tableModel = new DefaultTableModel(null, kolom);
+        table = new JTable(tableModel);
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        JButton tambahBtn = new JButton("Input Produksi");
+        tambahBtn.addActionListener(e -> inputProduksi());
+
+        add(scrollPane, BorderLayout.CENTER);
+        add(tambahBtn, BorderLayout.SOUTH);
     }
-    
-    @Override
-    protected void loadData() {
+
+    private void loadProduksi() {
         tableModel.setRowCount(0);
         try (Connection conn = Koneksi.getConnection()) {
             String sql = "SELECT * FROM produksi";
@@ -39,68 +62,14 @@ public class ProduksiFrame extends BaseDataFrame {
                 tableModel.addRow(row);
             }
         } catch (SQLException e) {
-            showError("Gagal memuat data produksi", e);
+            JOptionPane.showMessageDialog(this, "Gagal memuat data produksi: " + e.getMessage());
         }
     }
-    
-    @Override
-    protected void tambahData() {
-        ProduksiInputDialog dialog = new ProduksiInputDialog(this);
-        dialog.setVisible(true);
-        
-        if (dialog.isDataSaved()) {
-            loadData();
-            showSuccess("Data produksi berhasil disimpan.");
-        }
-    }
-}
 
-// input produksi 
-class ProduksiInputDialog extends JDialog {
-    private JComboBox<String> resepCombo;
-    private JTextField batchField;
-    private JTextField kgField;
-    private Map<String, Integer> resepMap;
-    private boolean dataSaved = false;
-    
-    public ProduksiInputDialog(JFrame parent) {
-        super(parent, "Input Produksi", true);
-        setSize(400, 200);
-        setLocationRelativeTo(parent);
-        initComponents();
-        loadResep();
-    }
-    
-    private void initComponents() {
-        resepCombo = new JComboBox<>();
-        batchField = new JTextField();
-        kgField = new JTextField();
-        resepMap = new HashMap<>();
-        
-        JPanel panel = new JPanel(new GridLayout(4, 2, 5, 5));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        panel.add(new JLabel("Pilih Produk (Resep):"));
-        panel.add(resepCombo);
-        panel.add(new JLabel("Jumlah Batch:"));
-        panel.add(batchField);
-        panel.add(new JLabel("Total Kilogram Produk:"));
-        panel.add(kgField);
-        
-        JButton okButton = new JButton("OK");
-        JButton cancelButton = new JButton("Cancel");
-        
-        okButton.addActionListener(e -> saveData());
-        cancelButton.addActionListener(e -> dispose());
-        
-        panel.add(okButton);
-        panel.add(cancelButton);
-        
-        add(panel);
-    }
-    
-    private void loadResep() {
+    private void inputProduksi() {
         try (Connection conn = Koneksi.getConnection()) {
+            JComboBox<String> resepCombo = new JComboBox<>();
+            Map<String, Integer> resepMap = new HashMap<>();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT id, nama_produk FROM resep");
             while (rs.next()) {
@@ -109,109 +78,74 @@ class ProduksiInputDialog extends JDialog {
                 resepCombo.addItem(nama);
                 resepMap.put(nama, id);
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Gagal memuat data resep: " + e.getMessage());
-        }
-    }
-    
-    private void saveData() {
-        try {
-            if (!validateInput()) return;
-            
-            String selected = (String) resepCombo.getSelectedItem();
-            int resepId = resepMap.get(selected);
-            int batch = Integer.parseInt(batchField.getText());
-            double kg = Double.parseDouble(kgField.getText());
-            
-            try (Connection conn = Koneksi.getConnection()) {
-                conn.setAutoCommit(false); // Start
-                
-                if (!checkAndUpdateStock(conn, resepId, batch)) {
-                    conn.rollback();
+
+            JTextField batchField = new JTextField();
+            JTextField kgField = new JTextField();
+
+            JPanel panel = new JPanel(new GridLayout(3, 2));
+            panel.add(new JLabel("Pilih Produk (Resep):")); panel.add(resepCombo);
+            panel.add(new JLabel("Jumlah Batch:")); panel.add(batchField);
+            panel.add(new JLabel("Total Kilogram Produk:")); panel.add(kgField);
+
+            int result = JOptionPane.showConfirmDialog(this, panel, "Input Produksi", JOptionPane.OK_CANCEL_OPTION);
+            if (result == JOptionPane.OK_OPTION) {
+                String selected = (String) resepCombo.getSelectedItem();
+                int resepId = resepMap.get(selected);
+                int batch = Integer.parseInt(batchField.getText());
+                double kg = Double.parseDouble(kgField.getText());
+
+                // Kurangi stok bahan sesuai resep
+                String queryDetail = "SELECT bahan_baku_id, jumlah FROM resep_detail WHERE resep_id = ?";
+                PreparedStatement detailStmt = conn.prepareStatement(queryDetail);
+                detailStmt.setInt(1, resepId);
+                ResultSet detailRS = detailStmt.executeQuery();
+                boolean cukupStok = true;
+
+                Map<Integer, Double> bahanUpdate = new HashMap<>();
+                while (detailRS.next()) {
+                    int bahanId = detailRS.getInt("bahan_baku_id");
+                    double jumlahPerBatch = detailRS.getDouble("jumlah");
+                    double total = jumlahPerBatch * batch;
+                    // Cek stok tersedia
+                    PreparedStatement cekStmt = conn.prepareStatement("SELECT stok FROM bahan_baku WHERE id = ?");
+                    cekStmt.setInt(1, bahanId);
+                    ResultSet cekRS = cekStmt.executeQuery();
+                    if (cekRS.next()) {
+                        double stok = cekRS.getDouble("stok");
+                        if (stok < total) cukupStok = false;
+                        bahanUpdate.put(bahanId, stok - total);
+                    }
+                }
+
+                if (!cukupStok) {
                     JOptionPane.showMessageDialog(this, "Stok bahan baku tidak mencukupi!");
                     return;
                 }
-                
-                saveProduksiData(conn, selected, batch, kg);
-                conn.commit(); // commit
-                
-                dataSaved = true;
-                dispose();
-                
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Gagal menyimpan data: " + e.getMessage());
-            }
-            
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Format angka tidak valid!");
-        }
-    }
-    
-    private boolean validateInput() {
-        if (resepCombo.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Pilih produk terlebih dahulu!");
-            return false;
-        }
-        
-        if (batchField.getText().trim().isEmpty() || kgField.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Semua field harus diisi!");
-            return false;
-        }
-        
-        return true;
-    }
-    
-    private boolean checkAndUpdateStock(Connection conn, int resepId, int batch) throws SQLException {
-        String queryDetail = "SELECT bahan_baku_id, jumlah FROM resep_detail WHERE resep_id = ?";
-        PreparedStatement detailStmt = conn.prepareStatement(queryDetail);
-        detailStmt.setInt(1, resepId);
-        ResultSet detailRS = detailStmt.executeQuery();
-        
-        Map<Integer, Double> bahanUpdate = new HashMap<>();
-        
-        while (detailRS.next()) {
-            int bahanId = detailRS.getInt("bahan_baku_id");
-            double jumlahPerBatch = detailRS.getDouble("jumlah");
-            double total = jumlahPerBatch * batch;
-            
-            // Cek stok tersedia
-            PreparedStatement cekStmt = conn.prepareStatement("SELECT stok FROM bahan_baku WHERE id = ?");
-            cekStmt.setInt(1, bahanId);
-            ResultSet cekRS = cekStmt.executeQuery();
-            
-            if (cekRS.next()) {
-                double stok = cekRS.getDouble("stok");
-                if (stok < total) {
-                    return false; // Stok tidak mencukupi
+
+                // Update stok bahan baku
+                for (Map.Entry<Integer, Double> entry : bahanUpdate.entrySet()) {
+                    PreparedStatement updateStmt = conn.prepareStatement("UPDATE bahan_baku SET stok = ? WHERE id = ?");
+                    updateStmt.setDouble(1, entry.getValue());
+                    updateStmt.setInt(2, entry.getKey());
+                    updateStmt.executeUpdate();
                 }
-                bahanUpdate.put(bahanId, stok - total);
+
+                // Simpan data produksi
+                int jumlahKemasan = (int) (kg * 1000 / 500); // Asumsi 1 kemasan = 500g
+                String insertSql = "INSERT INTO produksi (tanggal, produk, jumlah_batch, total_kg, jumlah_kemasan) VALUES (CURRENT_DATE(), ?, ?, ?, ?)";
+                PreparedStatement insertStmt = conn.prepareStatement(insertSql);
+                insertStmt.setString(1, selected);
+                insertStmt.setInt(2, batch);
+                insertStmt.setDouble(3, kg);
+                insertStmt.setInt(4, jumlahKemasan);
+                insertStmt.executeUpdate();
+
+                loadProduksi();
+                JOptionPane.showMessageDialog(this, "Data produksi berhasil disimpan.");
             }
+        } catch (SQLException | NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Gagal input produksi: " + e.getMessage());
         }
-        
-        // Update stok bahan baku
-        for (Map.Entry<Integer, Double> entry : bahanUpdate.entrySet()) {
-            PreparedStatement updateStmt = conn.prepareStatement("UPDATE bahan_baku SET stok = ? WHERE id = ?");
-            updateStmt.setDouble(1, entry.getValue());
-            updateStmt.setInt(2, entry.getKey());
-            updateStmt.executeUpdate();
-        }
-        
-        return true;
-    }
-    
-    private void saveProduksiData(Connection conn, String produk, int batch, double kg) throws SQLException {
-        int jumlahKemasan = (int) (kg * 1000 / 500); // Asumsi 1 kemasan = 500g
-        String insertSql = "INSERT INTO produksi (tanggal, produk, jumlah_batch, total_kg, jumlah_kemasan) VALUES (CURRENT_DATE(), ?, ?, ?, ?)";
-        
-        PreparedStatement insertStmt = conn.prepareStatement(insertSql);
-        insertStmt.setString(1, produk);
-        insertStmt.setInt(2, batch);
-        insertStmt.setDouble(3, kg);
-        insertStmt.setInt(4, jumlahKemasan);
-        insertStmt.executeUpdate();
-    }
-    
-    public boolean isDataSaved() {
-        return dataSaved;
     }
 }
+
