@@ -1,11 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controller;
 
+import model.DatabaseConnection;
 import model.User;
 import view.*;
+import java.sql.*;
+import javax.swing.JOptionPane;
 
 public class NavbarController {
     public void navigateTo(String menuName, User user) {
@@ -28,9 +27,18 @@ public class NavbarController {
             case "Penyimpanan Resep" :
                 new page3(user).setVisible(true);
                 break;
-            case "Perhitungan Upah" :
-                new page3(user).setVisible(true);
-                break;
+            case "Perhitungan Upah":
+            try {
+                DatabaseConnection conn = new DatabaseConnection();
+                Connection connection = conn.getConnection(); 
+                UpahPekerja upahView = new UpahPekerja();
+                UpahPekerjaController upahController = new UpahPekerjaController(connection, upahView);
+                upahView.setVisible(true);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Gagal koneksi ke database: " + ex.getMessage());
+            }
+            break;
             case "Laporan Keuangan" :
                 new page3(user).setVisible(true);
                 break;
