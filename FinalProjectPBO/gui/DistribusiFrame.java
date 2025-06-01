@@ -106,4 +106,31 @@ public class DistribusiFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Gagal input distribusi: " + e.getMessage());
         }
     }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // Set system look and feel for native appearance
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            // Create and show the distribution frame
+            DistribusiFrame frame = new DistribusiFrame();
+            frame.setVisible(true);
+            
+            // Test connection immediately
+            try (Connection testConn = Koneksi.getConnection()) {
+                if (testConn != null) {
+                    System.out.println("Database connection successful!");
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Database connection failed!");
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(frame, 
+                    "Connection test failed: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+    }
 }
