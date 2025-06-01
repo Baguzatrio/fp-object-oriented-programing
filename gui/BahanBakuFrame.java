@@ -98,5 +98,30 @@ public class BahanBakuFrame extends JFrame {
             }
         }
     }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            BahanBakuFrame frame = new BahanBakuFrame();
+            frame.setVisible(true);
+            
+            // Test connection immediately
+            try (Connection testConn = Koneksi.getConnection()) {
+                if (testConn != null) {
+                    System.out.println("Database connection successful!");
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Database connection failed!");
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(frame, 
+                    "Connection test failed: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+    }
 }
 
