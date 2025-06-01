@@ -147,5 +147,29 @@ public class ProduksiFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Gagal input produksi: " + e.getMessage());
         }
     }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            ProduksiFrame frame = new ProduksiFrame();
+            frame.setVisible(true);
+            
+            try (Connection testConn = Koneksi.getConnection()) {
+                if (testConn != null) {
+                    System.out.println("Database connection successful!");
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Database connection failed!");
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(frame, 
+                    "Connection test failed: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+    }
 }
 
