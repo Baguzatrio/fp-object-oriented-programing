@@ -1,13 +1,59 @@
 package view;
 
-public class DetailPekerja extends javax.swing.JFrame {
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.util.List;
+import java.util.HashMap;
+import controller.DetailPekerjaController;
+import model.DetailPekerjaModel;
 
-    public DetailPekerja() {
+public class DetailPekerja extends javax.swing.JFrame {
+    private JTable jTableUpah;
+    private DefaultTableModel tableModel;
+    private int idPekerja; 
+    
+    public DetailPekerja(int idPekerja) {
+        this.idPekerja = idPekerja;
         initComponents();
+        initTable();
+        DetailPekerjaController controller = new DetailPekerjaController(this);
+        controller.loadData(idPekerja);
+    }
+    
+    private void initTable() {
+        String[] columnNames = {"Tanggal", "Produk", "Jumlah", "Upah/Unit", "Total Upah"};
+        tableModel = new DefaultTableModel(columnNames, 0);
+        jTableUpah = new JTable(tableModel);
+        jScrollPane2.setViewportView(jTableUpah);
+    }
+     
+     public void setPekerjaDetail(String nama, String mulai, String telp, String alamat) {
+        jTextField1.setText(nama);
+        jTextField2.setText(mulai);
+        jTextField3.setText(telp);
+        jTextPane1.setText(alamat);
     }
 
+    public void setUpahTable(List<HashMap<String, String>> upahList) {
+        tableModel.setRowCount(0); // kosongkan tabel dulu
+        for (HashMap<String, String> upah : upahList) {
+            Object[] row = new Object[] {
+                upah.get("tanggal"),
+                upah.get("produk"),
+                upah.get("jumlah"),
+                upah.get("upah_per_unit"),
+                upah.get("total_upah")
+            };
+            tableModel.addRow(row);
+        }
+    }
+
+    public void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
@@ -36,16 +82,11 @@ public class DetailPekerja extends javax.swing.JFrame {
 
         jLabel5.setText("Alamat");
 
-        jTextField1.setText("jTextField1");
         jTextField1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jTextField1ActionPerformed(evt);
             }
         });
-
-        jTextField2.setText("jTextField2");
-
-        jTextField3.setText("jTextField3");
 
         jScrollPane1.setViewportView(jTextPane1);
 
@@ -134,11 +175,11 @@ public class DetailPekerja extends javax.swing.JFrame {
         );
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>                        
 
-    private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
+    private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {                                            
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField1ActionPerformed
+    }                                           
 
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -167,12 +208,15 @@ public class DetailPekerja extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new DetailPekerja().setVisible(true);
+                DetailPekerja view = new DetailPekerja(1);
+                DetailPekerjaController controller = new DetailPekerjaController(view);
+                view.setVisible(true);
+                controller.loadData("1");
             }
         });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration - do not modify                     
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -186,5 +230,6 @@ public class DetailPekerja extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
     private javax.swing.JTextPane jTextPane1;
-    // End of variables declaration//GEN-END:variables
+    // End of variables declaration                   
+
 }
