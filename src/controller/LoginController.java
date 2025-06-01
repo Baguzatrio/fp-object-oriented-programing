@@ -9,8 +9,8 @@ import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 
 public class LoginController {
-    private page1 view;
-    private LoginUser login;
+    public page1 view;
+    public LoginUser login;
    
     public LoginController(page1 view) {
         this.view = view;
@@ -20,7 +20,7 @@ public class LoginController {
         view.addRegisterListener(new RegisterListener());
     }
 
-    class LoginListener implements ActionListener {
+    public class LoginListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             String username = view.getUsername();
             String password = view.getPassword();
@@ -35,10 +35,10 @@ public class LoginController {
             }
         }
     }
-    class RegisterListener implements ActionListener {
+    public class RegisterListener implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         view.goToPage2();  // Pastikan ada method goToPage2() di page1
     }
-}
+}    
 }
