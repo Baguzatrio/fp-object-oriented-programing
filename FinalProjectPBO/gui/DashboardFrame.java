@@ -118,5 +118,19 @@ public class DashboardFrame extends JFrame {
         });
         
         return button;
+        public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // Set system look and feel for native appearance
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            // Create and show the dashboard
+            DashboardFrame dashboard = new DashboardFrame();
+            dashboard.setVisible(true);
+        });
+    }
     }
 }
