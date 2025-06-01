@@ -95,5 +95,29 @@ public class UpahFrame extends JFrame {
             }
         }
     }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            UpahFrame frame = new UpahFrame();
+            frame.setVisible(true);
+            
+            try (Connection testConn = Koneksi.getConnection()) {
+                if (testConn != null) {
+                    System.out.println("Database connection successful!");
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Database connection failed!");
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(frame, 
+                    "Connection test failed: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+    }
 }
 
