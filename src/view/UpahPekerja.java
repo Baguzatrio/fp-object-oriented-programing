@@ -1,57 +1,64 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package view;
 
-import javax.swing.table.DefaultTableModel;
 import javax.swing.JTable;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.table.*;
+import java.util.List;
+import controller.UpahPekerjaController;
+
 public class UpahPekerja extends javax.swing.JFrame {
 
     private javax.swing.JTable tabelUpah;
+    
     public UpahPekerja() {
         initComponents();
         setupTabelUpah();
     }
 
+    public JButton getBtnDaftarPekerja() {
+        return jButton2;
+    }
+    
+    public JTable getTabelUpah() {
+        return tabelUpah;
+    }
+    
     private void setupTabelUpah() {
-    // Kolom ditambah "Aksi" untuk tombol
-    String[] namaKolom = {"Tanggal", "ID", "Nama", "Produk", "Jumlah", "Upah/Unit", "Total", "Aksi"};
-    DefaultTableModel model = new DefaultTableModel(namaKolom, 0) {
-        @Override
-        public boolean isCellEditable(int row, int column) {
-            return column == 7; // Hanya kolom "Aksi" yang editable
-        }
-        
-        @Override
-        public Class<?> getColumnClass(int column) {
-            return column == 7 ? JButton.class : Object.class; // Kolom 7 berisi button
-        }
-    };
-    
-    tabelUpah = new javax.swing.JTable(model);
+        String[] namaKolom = {"Tanggal", "ID", "Nama", "Produk", "Jumlah", "Upah/Unit", "Total", "Aksi"};
+        DefaultTableModel model = new DefaultTableModel(namaKolom, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 7;
+            }
+            
+            @Override
+            public Class<?> getColumnClass(int column) {
+                return column == 7 ? JButton.class : Object.class;
+            }
+        };
+        tabelUpah = new JTable(); 
+        tabelUpah.setModel(model);
         tabelUpah.setAutoCreateRowSorter(true);
-        tabelUpah.setFillsViewportHeight(true);
-        tabelUpah.getColumnModel().getColumn(0).setPreferredWidth(100);
-        tabelUpah.getColumnModel().getColumn(1).setPreferredWidth(50);
-        tabelUpah.getColumnModel().getColumn(2).setPreferredWidth(150);
-        tabelUpah.getColumnModel().getColumn(2).setPreferredWidth(150);
-        tabelUpah.getColumnModel().getColumn(2).setPreferredWidth(50);
-        tabelUpah.getColumnModel().getColumn(2).setPreferredWidth(100);
-        tabelUpah.getColumnModel().getColumn(2).setPreferredWidth(100);
-        jScrollPane1.setViewportView(tabelUpah);
-        tambahkanData();
+        
+        // Set renderer dan editor untuk tombol
+        TableColumn buttonColumn = tabelUpah.getColumnModel().getColumn(7);
+        buttonColumn.setCellRenderer(new ButtonRenderer());
+        buttonColumn.setCellEditor(new ButtonEditor(new JCheckBox()));
+    }
     
-    // Tambahkan tombol ke kolom terakhir
-    TableColumnModel columnModel = tabelUpah.getColumnModel();
-    TableColumn buttonColumn = columnModel.getColumn(7);
-    buttonColumn.setCellRenderer(new ButtonRenderer());
-    buttonColumn.setCellEditor(new ButtonEditor(new JCheckBox()));
-}
+    public void tampilkanData(List<Object[]> data) {
+        DefaultTableModel model = (DefaultTableModel) tabelUpah.getModel();
+        model.setRowCount(0); // Clear existing data
+        
+        for (Object[] row : data) {
+            Object[] rowWithButton = new Object[row.length + 1];
+            System.arraycopy(row, 0, rowWithButton, 0, row.length);
+            rowWithButton[row.length] = "Detail";
+            model.addRow(rowWithButton);
+        }
+    }
 
 class ButtonRenderer extends JButton implements TableCellRenderer {
     public ButtonRenderer() {
@@ -66,29 +73,20 @@ class ButtonRenderer extends JButton implements TableCellRenderer {
 }
 
 class ButtonEditor extends DefaultCellEditor {
-    private JButton button;
-    private String idPekerja;
-    
-    public ButtonEditor(JCheckBox checkBox) {
-        super(checkBox);
-        button = new JButton();
-        button.setOpaque(true);
-        button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                // Pindah ke halaman detail
-                new DetailPekerja().setVisible(true);
-                ((JFrame)SwingUtilities.getWindowAncestor(button)).dispose();
-            }
-        });
+        private JButton button;
+        
+        public ButtonEditor(JCheckBox checkBox) {
+            super(checkBox);
+            button = new JButton();
+            button.setOpaque(true);
+        }
+        
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                boolean isSelected, int row, int column) {
+            button.setText("Detail");
+            return button;
+        }
     }
-    
-    public Component getTableCellEditorComponent(JTable table, Object value,
-            boolean isSelected, int row, int column) {
-        idPekerja = table.getValueAt(row, 1).toString(); // Ambil ID dari kolom 2
-        button.setText("Detail");
-        return button;
-    }
-}
     
     private void tambahkanData() {
         DefaultTableModel model = (DefaultTableModel) tabelUpah.getModel();
@@ -96,7 +94,7 @@ class ButtonEditor extends DefaultCellEditor {
     }
  
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
@@ -140,7 +138,7 @@ class ButtonEditor extends DefaultCellEditor {
         );
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>                        
 
     /**
      * @param args the command line arguments
@@ -177,9 +175,9 @@ class ButtonEditor extends DefaultCellEditor {
         });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration - do not modify                     
     private javax.swing.JButton jButton2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
-    // End of variables declaration//GEN-END:variables
+    // End of variables declaration                   
 }
