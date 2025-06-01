@@ -90,4 +90,28 @@ public class ResepFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Pilih resep yang ingin dilihat.");
         }
     }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            ResepFrame frame = new ResepFrame();
+            frame.setVisible(true);
+            
+            try (Connection testConn = Koneksi.getConnection()) {
+                if (testConn != null) {
+                    System.out.println("Database connection successful!");
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Database connection failed!");
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(frame, 
+                    "Connection test failed: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+    }
 }
