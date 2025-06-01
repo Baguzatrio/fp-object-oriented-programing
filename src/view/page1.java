@@ -30,7 +30,7 @@ public class page1 extends javax.swing.JFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
 
         jCheckBoxMenuItem1 = new javax.swing.JCheckBoxMenuItem();
@@ -182,15 +182,15 @@ public class page1 extends javax.swing.JFrame {
         );
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>                        
 
-    private void jPasswordField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jPasswordField1ActionPerformed
+    private void jPasswordField1ActionPerformed(java.awt.event.ActionEvent evt) {                                                
         // TODO add your handling code here:
-    }//GEN-LAST:event_jPasswordField1ActionPerformed
+    }                                               
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {                                         
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }                                        
 
     public String getUsername() {
         return jTextField1.getText();
@@ -217,6 +217,18 @@ public class page1 extends javax.swing.JFrame {
     new page2().setVisible(true);
     this.dispose();
 }
+    public void reinitLoginListeners() {
+    for (ActionListener al : jButton1.getActionListeners()) {
+        jButton1.removeActionListener(al);
+    }
+    for (ActionListener al : jButton2.getActionListeners()) {
+        jButton2.removeActionListener(al);
+    }
+
+    addLoginnListener(new LoginController(this).new LoginListener());
+    addRegisterListener(new LoginController(this).new RegisterListener());
+}
+
     
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -252,7 +264,7 @@ public class page1 extends javax.swing.JFrame {
         });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration - do not modify                     
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem1;
@@ -265,7 +277,7 @@ public class page1 extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPasswordField jPasswordField1;
     private javax.swing.JTextField jTextField1;
-    // End of variables declaration//GEN-END:variables
+    // End of variables declaration                   
 
 public void setUser(User user) {
     this.user = user;
