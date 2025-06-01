@@ -106,4 +106,54 @@ public class ResepDetailFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Gagal tambah detail: " + e.getMessage());
         }
     }
+       public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            JTextField idField = new JTextField();
+            JTextField nameField = new JTextField();
+            
+            JPanel inputPanel = new JPanel(new GridLayout(2, 2));
+            inputPanel.add(new JLabel("Recipe ID:"));
+            inputPanel.add(idField);
+            inputPanel.add(new JLabel("Recipe Name:"));
+            inputPanel.add(nameField);
+            
+            int result = JOptionPane.showConfirmDialog(
+                null, 
+                inputPanel, 
+                "Enter Recipe Details", 
+                JOptionPane.OK_CANCEL_OPTION
+            );
+            
+            if (result == JOptionPane.OK_OPTION) {
+                try {
+                    int recipeId = Integer.parseInt(idField.getText());
+                    String recipeName = nameField.getText();
+                    
+                    try (Connection testConn = Koneksi.getConnection()) {
+                        if (testConn != null) {
+                            System.out.println("Database connection successful!");
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Database connection failed!");
+                            return;
+                        }
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(null, "Connection test failed: " + ex.getMessage());
+                        ex.printStackTrace();
+                        return;
+                    }
+                    
+                    ResepDetailFrame frame = new ResepDetailFrame(recipeId, recipeName);
+                    frame.setVisible(true);
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(null, "Invalid Recipe ID! Must be a number.");
+                }
+            }
+        });
+    }
 }
