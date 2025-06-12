@@ -3,7 +3,7 @@ package controller;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import model.FormTambahDistribusiModel;
-import view.FormTambahDistribusi;
+import view.FormTambahDistribusi2;
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
@@ -12,11 +12,11 @@ import java.util.*;
 import model.User;
 
 public class FormTambahDistribusiController {
-    private FormTambahDistribusi view;
+    private FormTambahDistribusi2 view;
     private FormTambahDistribusiModel model;
     private User user;
     
-    public FormTambahDistribusiController(FormTambahDistribusi view) {
+    public FormTambahDistribusiController(FormTambahDistribusi2 view) {
         this.view = view;
         try {
             this.model = new FormTambahDistribusiModel();
@@ -107,14 +107,14 @@ public class FormTambahDistribusiController {
     }
     public void handleBackToDistribusi() {
     view.dispose(); // Menutup form sekarang
-    view.Distribusi Distribusi = new view.Distribusi(user);
+    view.Distribusi2 Distribusi = new view.Distribusi2(user);
     Distribusi.setVisible(true);
 }
 
     public class ControllerDistribusi {
-    private FormTambahDistribusi view;
+    private FormTambahDistribusi2 view;
 
-    public ControllerDistribusi(FormTambahDistribusi view) {
+    public ControllerDistribusi(FormTambahDistribusi2 view) {
         this.view = view;
         initListener();
     }
@@ -144,7 +144,7 @@ public class FormTambahDistribusiController {
             List<String[]> daftarBarang = getDataBarang();
             
             // Tampilkan preview
-            new view.FormPreviewNotaA4(nomorNota, nama, alamat, tanggal, 
+            new view.FormPreviewNotaA4(view, nomorNota, nama, alamat, tanggal, 
                                 total, bayar, kembali, daftarBarang);
             
         } catch (Exception ex) {

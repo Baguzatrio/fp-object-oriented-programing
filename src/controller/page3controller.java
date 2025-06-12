@@ -1,43 +1,48 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controller;
 
-import javax.swing.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import model.User;
-import view.page3;
+import view.Dashboard;
 
 public class page3controller {
-    private page3 view;
+    private final Dashboard view;
+    private final User user;
 
-    public page3controller(page3 view, User user) {
+    public page3controller(Dashboard view, User user) {
         this.view = view;
-this.view.jPanel5.addMouseListener(new MouseAdapter() {
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        new view.Distribusi(user).setVisible(true); // tampilkan halaman Produksi
-        view.dispose(); // tutup halaman sekarang (opsional)
-    }
-});
-
-this.view.jPanel4.addMouseListener(new MouseAdapter() {
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        new view.Distribusi(user).setVisible(true); // tampilkan halaman Pengemasan
-        view.dispose(); // tutup halaman sekarang
-    }
-});
-
-this.view.jPanel6.addMouseListener(new MouseAdapter() {
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        new view.Distribusi(user).setVisible(true); // tampilkan halaman Distribusi
-        view.dispose(); // tutup halaman sekarang
-    }
-});
-
+        this.user = user;
+        setupEventListeners();
     }
 
+    private void setupEventListeners() {
+        // Daftar Produksi Panel
+        view.getDaftarProduksiPanel().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                openDistribusiView();
+            }
+        });
+
+        // Produksi Panel (previously jPanel4)
+        view.getProduksiPanel().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                openDistribusiView();
+            }
+        });
+
+        // Distribusi Panel (previously jPanel6)
+        view.getDistribusiPanel().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                openDistribusiView();
+            }
+        });
+    }
+
+    private void openDistribusiView() {
+        new view.Distribusi2(user).setVisible(true);
+        view.dispose();
+    }
 }

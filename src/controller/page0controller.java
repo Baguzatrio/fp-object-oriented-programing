@@ -1,8 +1,8 @@
 package controller;
 
 import view.page0;
-import view.page1;
-import view.page2;
+import view.Login;
+import view.Register;
 
 public class page0controller {
     private page0 view;
@@ -15,12 +15,12 @@ public class page0controller {
     }
     
     private void bukaLogin() {
-        new page1().setVisible(true);
+        new Login().setVisible(true);
         view.dispose();
     }
     
     private void bukaSignup()  {
-        new page2().setVisible(true);
+        new Register().setVisible(true);
         view.dispose();
     }
 }

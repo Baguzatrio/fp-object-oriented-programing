@@ -2,17 +2,17 @@ package controller;
 
 import model.LoginUser;
 import model.User;
-import view.page1;
+import view.Login;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 
 public class LoginController {
-    public page1 view;
+    public Login view;
     public LoginUser login;
    
-    public LoginController(page1 view) {
+    public LoginController(Login view) {
         this.view = view;
         this.login = new LoginUser();
 
@@ -29,7 +29,7 @@ public class LoginController {
             if (user != null) {
                 JOptionPane.showMessageDialog(view, "Login berhasil!");
                 view.setUser(user); // kamu harus buat setUser()
-                view.goToPage3();
+                view.goToDashboard();
             } else {
                 JOptionPane.showMessageDialog(view, "Username atau password salah.");
             }

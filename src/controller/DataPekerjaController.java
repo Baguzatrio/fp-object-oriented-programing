@@ -2,18 +2,18 @@ package controller;
 
 import java.sql.Date;
 import model.DataPekerjaModel;
-import view.DataPekerja;
+import view.DataPekerja2;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataPekerjaController {
-    private final DataPekerja view;
+    private final DataPekerja2 view;
     private final SimpleDateFormat displayFormat = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat inputFormat = new SimpleDateFormat("dd/MM/yyyy");
     
-    public DataPekerjaController(DataPekerja view) {
+    public DataPekerjaController(DataPekerja2 view) {
         this.view = view;
     }
     

@@ -1,7 +1,7 @@
 package controller;
 
 import model.DataCustomerModel;
-import view.DataCustomer;
+import view.DataCustomer2;
 import controller.DistribusiController;
 import model.DistribusiModel;
 import java.awt.event.*;
@@ -11,14 +11,14 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import model.User;
-import view.Distribusi;
+import view.Distribusi2;
 
 public class DataCustomerController {
     private DataCustomerModel model;
-    private DataCustomer view;
+    private DataCustomer2 view;
     private User user;
 
-    public DataCustomerController(DataCustomerModel model, DataCustomer view, User user) {
+    public DataCustomerController(DataCustomerModel model, DataCustomer2 view, User user) {
         this.model = model;
         this.view = view;
         this.user = user;
@@ -38,7 +38,7 @@ public class DataCustomerController {
         view.addEditButtonListener(e -> enableEdit());
         view.addBackButtonListener(e -> {
             view.dispose();
-            Distribusi distribusiView = new Distribusi(user);
+            Distribusi2 distribusiView = new Distribusi2(user);
             DistribusiModel distribusiModel = new DistribusiModel(); 
             DistribusiController distribusicon = new DistribusiController(distribusiView, distribusiModel);
             distribusiView.setVisible(true);

@@ -44,7 +44,7 @@ public class DetailPekerjaModel {
     public List<HashMap<String, String>> getUpahPekerja(int idPekerja) {
         List<HashMap<String, String>> list = new ArrayList<>();
         try {
-            String sql = "SELECT tanggal, keterangan, jumlah FROM upah_pekerja WHERE id_pekerja = ? ORDER BY tanggal DESC";
+            String sql = "SELECT tanggal, jumlah FROM upah_pekerja WHERE id_pekerja = ? ORDER BY tanggal DESC";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, idPekerja);
             ResultSet rs = ps.executeQuery();
@@ -52,7 +52,6 @@ public class DetailPekerjaModel {
             while (rs.next()) {
                 HashMap<String, String> item = new HashMap<>();
                 item.put("tanggal", rs.getString("tanggal"));
-                item.put("keterangan", rs.getString("keterangan"));
                 item.put("jumlah", rs.getString("jumlah"));
                 list.add(item);
             }

@@ -73,8 +73,8 @@ public class HamburgerMenu {
         drawerPanel.setBackground(new Color(240, 240, 240));
         
         // Atur ukuran drawer agar full height
-        drawerPanel.setBounds(-250, navBar.getHeight(), 250, 
-                           parentPanel.getHeight() - navBar.getHeight());
+        drawerPanel.setBounds(0, 0, 200, 
+                           parentPanel.getHeight());
         drawerPanel.setVisible(false);
         
         // Header with user info and close button

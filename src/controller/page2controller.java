@@ -34,5 +34,5 @@ public class page2controller {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Terjadi kesalahan: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-    }
+    }    
 }

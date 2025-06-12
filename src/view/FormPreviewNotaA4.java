@@ -11,12 +11,13 @@ import java.awt.print.*;
 import java.util.List;
 import java.util.Arrays;
 
-public class FormPreviewNotaA4 extends JFrame {
+public class FormPreviewNotaA4 extends JDialog {
 
     JPanel panelNota;
     JButton btnCetak;
 
-    public FormPreviewNotaA4(String nomorNota, String nama, String alamat, String tanggal, String total, String bayar, String kembali, List<String[]> daftarBarang) {
+    public FormPreviewNotaA4(JFrame parent, String nomorNota, String nama, String alamat, String tanggal, String total, String bayar, String kembali, List<String[]> daftarBarang) {
+        super(parent, "Preview Nota", true);
         setTitle("Preview Nota");
         setSize(620, 900);
         setLocationRelativeTo(null);
@@ -28,13 +29,13 @@ public class FormPreviewNotaA4 extends JFrame {
         panelNota.setLayout(null);
 
         // HEADER
-        ImageIcon logo = new ImageIcon("/fppbo/icons/MT.png"); // Path logo
+        ImageIcon logo = new ImageIcon("/icons/MT.png"); // Path logo
         Image img = logo.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
         JLabel lblLogo = new JLabel(new ImageIcon(img));
         lblLogo.setBounds(30, 15, 50, 50);
         panelNota.add(lblLogo);
 
-        JLabel lblNamaPabrik = new JLabel("Ikan Laut Barokah");
+        JLabel lblNamaPabrik = new JLabel("Ikan Laut Barokah", SwingConstants.CENTER);
         lblNamaPabrik.setFont(new Font("Serif", Font.BOLD, 20));
         lblNamaPabrik.setBounds(100, 20, 300, 30);
         panelNota.add(lblNamaPabrik);
@@ -120,8 +121,15 @@ public class FormPreviewNotaA4 extends JFrame {
         add(scroll, BorderLayout.CENTER);
 
         // TOMBOL CETAK
+        JPanel bottomPanel = new JPanel();
         btnCetak = new JButton("Cetak Nota");
-        add(btnCetak, BorderLayout.SOUTH);
+        bottomPanel.add(btnCetak);
+        
+        add(scroll, BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
+        
+        pack();
+        setVisible(true);
 
         btnCetak.addActionListener(new ActionListener() {
             @Override
@@ -161,25 +169,5 @@ public class FormPreviewNotaA4 extends JFrame {
         });
 
         setVisible(true);
-    }
-
-    // TEST
-    public static void main(String[] args) {
-        // Data dummy dari FormTambahDistribusi
-        String nomor = "202505251";
-        String nama = "Dina";
-        String alamat = "Jl. Sukajadi No. 45";
-        String tanggal = "25/05/2025";
-        String total = "85000";
-        String bayar = "100000";
-        String kembali = "15000";
-
-        List<String[]> barang = Arrays.asList(
-                new String[]{"Bakso Urat", "2", "15000", "30000"},
-                new String[]{"Tahu", "5", "10000", "50000"},
-                new String[]{"Kuah", "1", "5000", "5000"}
-        );
-
-        new FormPreviewNotaA4(nomor, nama, alamat, tanggal, total, bayar, kembali, barang);
     }
 }

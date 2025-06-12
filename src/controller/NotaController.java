@@ -6,10 +6,12 @@ import view.FormPreviewNotaA4;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
+import javax.swing.JFrame;
 
 public class NotaController {
     private NotaModel model;
     private Connection conn;
+    private JFrame parentFrame;
 
     public NotaController(Connection conn) {
         this.conn = conn;
@@ -26,7 +28,7 @@ public class NotaController {
                 return;
             }
 
-            new FormPreviewNotaA4(
+            new FormPreviewNotaA4(parentFrame,
                 nomorNota,
                 data.get("nama"),
                 data.get("alamat"),

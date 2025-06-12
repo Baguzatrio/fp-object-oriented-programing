@@ -1,16 +1,16 @@
 package controller;
 
 import model.DetailPekerjaModel;
-import view.DetailPekerja;
+import view.DetailPekerja2;
 
 import java.util.HashMap;
 import java.util.List;
 
 public class DetailPekerjaController {
-    private DetailPekerja view;
+    private DetailPekerja2 view;
     private DetailPekerjaModel model;
 
-    public DetailPekerjaController(DetailPekerja view) {
+    public DetailPekerjaController(DetailPekerja2 view) {
         this.view = view;
         this.model = new DetailPekerjaModel();
     }
