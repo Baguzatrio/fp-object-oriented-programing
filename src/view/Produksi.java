@@ -2,240 +2,373 @@ package view;
 
 import model.*;
 import controller.*;
-import view.*;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.*;
 
-public class Produksi extends JPanel {
+public class Produksi extends JFrame {
+    // Color Palette
+    private static final Color MIDNIGHT_BLUE = new Color(25, 42, 86);
+    private static final Color SKY_BLUE = new Color(135, 206, 235);
+    private static final Color LIGHT_BLUE = new Color(173, 216, 230);
+    private static final Color WHITE = Color.WHITE;
+    private static final Color BLACK = Color.BLACK;
+    
     private JTable table;
     private DefaultTableModel tableModel;
     private ProduksiController controller;
-    private User currentUser;
-    private HamburgerMenu hamburgerMenu;
-
-    private JPanel inputPanel;
+    private JPanel formPanel;
     private JButton toggleInputBtn;
+    private JComboBox<String> produkCombo;
+    private JComboBox<String> pekerjaCombo;
+    private JTextField batchField;
+    private JTextField kgField;
+    private Map<String, Integer> produkMap;
+    private Map<String, Integer> pekerjaMap;
+    private HamburgerMenu hamburgerMenu;
+    private User currentUser;
 
     public Produksi(User currentUser) {
-        this.currentUser = currentUser;
         this.controller = new ProduksiController();
+        this.currentUser = currentUser;
+        setTitle("Produksi");
+        setSize(1200, 700);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        
+        initComponents();
+        loadData();
+    }
+
+    private void initComponents() {
+        // Main panel setup
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(LIGHT_BLUE);
+        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+         // Navbar dan drawer
         hamburgerMenu = new HamburgerMenu(this, currentUser);
-        setLayout(new BorderLayout());
+        getContentPane().add(hamburgerMenu.getNavBar(), BorderLayout.NORTH);
 
-        // Navbar dan Drawer
-        add(hamburgerMenu.getNavBar(), BorderLayout.NORTH);
-        add(hamburgerMenu.getDrawerPanel(), BorderLayout.WEST);
+        // Title panel
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        titlePanel.setBackground(LIGHT_BLUE);
+        titlePanel.setBorder(new EmptyBorder(0, 10, 15, 0));
+        
+        JLabel titleLabel = new JLabel("PRODUKSI");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        titleLabel.setForeground(MIDNIGHT_BLUE);
+        titlePanel.add(titleLabel);
+        mainPanel.add(titlePanel, BorderLayout.NORTH);
 
-        // Main Panel (isi konten)
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-
-        // Panel Tabel
-        JPanel panelTabel = new JPanel(new BorderLayout());
-        String[] kolom = {"ID", "Tanggal", "Produk", "Jumlah Batch", "Total Kg", "Jumlah Kemasan"};
-        tableModel = new DefaultTableModel(null, kolom);
+        // Table setup
+        String[] kolom = {"ID", "Tanggal", "Produk", "Pegawai", "Jumlah Batch", "Total Kg", "Jumlah Kemasan"};
+        tableModel = new DefaultTableModel(null, kolom) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        
         table = new JTable(tableModel);
+        styleTable();
+        
         JScrollPane scrollPane = new JScrollPane(table);
-        panelTabel.add(scrollPane, BorderLayout.CENTER);
-        mainPanel.add(panelTabel);
+        scrollPane.setBorder(new LineBorder(MIDNIGHT_BLUE, 1, true));
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Ganti kode floating button dengan ini:
-toggleInputBtn = new JButton("+") {
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(getBackground());
-        g2.fillOval(0, 0, getWidth(), getHeight());
-        super.paintComponent(g2);
-    }
-
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(50, 50);
-    }
-};
-
-// Style tombol
-toggleInputBtn.setBackground(new Color(70, 130, 180));
-toggleInputBtn.setForeground(Color.WHITE);
-toggleInputBtn.setFont(new Font("SansSerif", Font.BOLD, 20));
-toggleInputBtn.setBorder(BorderFactory.createEmptyBorder());
-toggleInputBtn.setContentAreaFilled(false);
-toggleInputBtn.setFocusPainted(false);
-toggleInputBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-// Posisikan tombol di atas input panel
-inputPanel = createInputPanel();
-JLayeredPane layeredPane = new JLayeredPane();
-layeredPane.setPreferredSize(new Dimension(300, 600)); // Sesuaikan dengan ukuran inputPanel
-layeredPane.add(inputPanel, JLayeredPane.DEFAULT_LAYER);
-layeredPane.add(toggleInputBtn, JLayeredPane.PALETTE_LAYER);
-
-// Tambahkan ke layout
-JPanel eastPanel = new JPanel(new BorderLayout());
-eastPanel.add(layeredPane, BorderLayout.CENTER);
-add(eastPanel, BorderLayout.EAST);
-
-        toggleInputBtn.addActionListener(e -> showInputPanel());
-
-        // Layered Pane untuk menumpuk tombol di pojok kanan bawah
-// Panel utama dengan tombol ➕ mengambang
-JPanel contentPanel = new JPanel(new BorderLayout());
-contentPanel.add(mainPanel, BorderLayout.CENTER);
-
-// Panel tombol ➕ di kanan bawah
-JPanel floatingButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-floatingButtonPanel.setOpaque(false); // transparan
-floatingButtonPanel.add(toggleInputBtn);
-
-contentPanel.add(floatingButtonPanel, BorderLayout.SOUTH);
-add(contentPanel, BorderLayout.CENTER);
-
-
-        // Panel input produksi dari kanan
+        // Circle add button
+        toggleInputBtn = new CircleButton("+");
+        toggleInputBtn.addActionListener(e -> toggleFormPanel());
         
-        add(inputPanel, BorderLayout.EAST);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(LIGHT_BLUE);
+        buttonPanel.setBorder(new EmptyBorder(0, 0, 10, 10));
+        buttonPanel.add(toggleInputBtn);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Form panel (compact size)
+        formPanel = createFormPanel();
+        formPanel.setVisible(false);
+        mainPanel.add(formPanel, BorderLayout.EAST);
+
+        getContentPane().add(mainPanel);
     }
-
-    private JPanel createInputPanel() {
-        JPanel panel = new JPanel();
-        
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-    new LineBorder(new Color(200, 200, 200)), // border luar (line)
-    new EmptyBorder(20, 30, 20, 20)           // border dalam (padding)
-));
-
-        panel.setBackground(new Color(240, 248, 255)); // biru muda
-        panel.setPreferredSize(new Dimension(300, 600));
-        panel.setVisible(false);
-
-        JLabel title = new JLabel("Input Produksi");
-        title.setFont(new Font("SansSerif", Font.BOLD, 18));
+    
+    private JPanel createFormPanel() {
+    JPanel panel = new JPanel();
+    panel.setPreferredSize(new Dimension(300, 350)); // Slightly wider but still compact
+    panel.setBackground(LIGHT_BLUE);
+    panel.setBorder(new MatteBorder(0, 1, 0, 0, MIDNIGHT_BLUE));
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    
+    // Title with close button
+    JLabel title = new JLabel("Tambah Produksi");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        title.setForeground(MIDNIGHT_BLUE);
+        title.setBorder(new EmptyBorder(15, 15, 15, 15));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(title);
+    
+    // Form content panel
+    JPanel formContent = new JPanel();
+    formContent.setLayout(new BoxLayout(formContent, BoxLayout.Y_AXIS));
+    formContent.setBackground(LIGHT_BLUE);
+    formContent.setBorder(new EmptyBorder(5, 15, 5, 15));
+    
+    // Load combobox data
+    produkCombo = new JComboBox<>();
+    produkMap = controller.loadResep(produkCombo);
+    styleComboBox(produkCombo);
+    
+    pekerjaCombo = new JComboBox<>();
+    pekerjaMap = controller.loadPekerja(pekerjaCombo);
+    styleComboBox(pekerjaCombo);
+    
+    batchField = new JTextField();
+    styleTextField(batchField);
+    batchField.getDocument().addDocumentListener(new DocumentListener() {
+        @Override public void insertUpdate(DocumentEvent e) { updateKgValue(); }
+        @Override public void removeUpdate(DocumentEvent e) { updateKgValue(); }
+        @Override public void changedUpdate(DocumentEvent e) { updateKgValue(); }
+    });
+    
+    kgField = new JTextField("0 kg");
+    kgField.setEditable(false);
+    styleTextField(kgField);
+    
+    // Add form components with proper spacing
+    formContent.add(createFormLabel("Produk:"));
+    formContent.add(Box.createRigidArea(new Dimension(0, 5)));
+    formContent.add(produkCombo);
+    formContent.add(Box.createRigidArea(new Dimension(0, 10)));
+    
+    formContent.add(createFormLabel("Pekerja:"));
+    formContent.add(Box.createRigidArea(new Dimension(0, 5)));
+    formContent.add(pekerjaCombo);
+    formContent.add(Box.createRigidArea(new Dimension(0, 10)));
+    
+    formContent.add(createFormLabel("Jumlah Batch:"));
+    formContent.add(Box.createRigidArea(new Dimension(0, 5)));
+    formContent.add(batchField);
+    formContent.add(Box.createRigidArea(new Dimension(0, 10)));
+    
+    formContent.add(createFormLabel("Total Kg:"));
+    formContent.add(Box.createRigidArea(new Dimension(0, 5)));
+    formContent.add(kgField);
+    
+    panel.add(formContent);
+    panel.add(Box.createVerticalGlue());
+    
+    // Submit button
+    JButton submitBtn = new JButton("Simpan Produksi");
+    submitBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+    submitBtn.setMaximumSize(new Dimension(200, 35));
+    submitBtn.setBackground(SKY_BLUE);
+    submitBtn.setForeground(MIDNIGHT_BLUE);
+    submitBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+    submitBtn.setBorder(new EmptyBorder(8, 20, 8, 20));
+    submitBtn.addActionListener(e -> {
+        try {
+            String produk = (String) produkCombo.getSelectedItem();
+            String pekerja = (String) pekerjaCombo.getSelectedItem();
+            int batch = Integer.parseInt(batchField.getText());
+            double kg = batch * 12; // 1 batch = 12 kg
+            int idPekerja = pekerjaMap.get(pekerja);
+            
+            if (controller.prosesInputProduksi(produkMap.get(produk), produk, batch, kg, idPekerja)) {
+                JOptionPane.showMessageDialog(this, "Produksi berhasil disimpan!");
+                toggleFormPanel();
+                loadData();
+                clearForm();
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+        }
+    });
+    
+    JPanel buttonPanel = new JPanel();
+    buttonPanel.setBackground(LIGHT_BLUE);
+    buttonPanel.setBorder(new EmptyBorder(10, 0, 15, 0));
+    buttonPanel.add(submitBtn);
+    panel.add(buttonPanel);
+    
+    return panel;
+}
 
-        JComboBox<String> resepCombo = new JComboBox<>();
-        Map<String, Integer> resepMap = controller.loadResep(resepCombo);
-        JTextField batchField = new JTextField();
-        JTextField kgField = new JTextField();
+private JLabel createFormLabel(String text) {
+    JLabel label = new JLabel(text);
+    label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    label.setForeground(MIDNIGHT_BLUE);
+    label.setAlignmentX(Component.LEFT_ALIGNMENT);
+    return label;
+}
 
-        JButton simpanBtn = new JButton("Simpan");
-        JButton closeBtn = new JButton("✖️");
-        closeBtn.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        closeBtn.setBorderPainted(false);
-        closeBtn.setContentAreaFilled(false);
-        closeBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
+private void styleComboBox(JComboBox<String> combo) {
+    combo.setMaximumSize(new Dimension(250, 30));
+    combo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    combo.setBackground(WHITE);
+    combo.setForeground(MIDNIGHT_BLUE);
+    combo.setBorder(BorderFactory.createCompoundBorder(
+        new LineBorder(MIDNIGHT_BLUE, 1),
+        new EmptyBorder(0, 8, 0, 8)
+    ));
+}
 
-        closeBtn.addActionListener(e -> inputPanel.setVisible(false));
+private void styleTextField(JTextField field) {
+    field.setMaximumSize(new Dimension(250, 30));
+    field.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    field.setBackground(WHITE);
+    field.setForeground(MIDNIGHT_BLUE);
+    field.setBorder(BorderFactory.createCompoundBorder(
+        new LineBorder(MIDNIGHT_BLUE, 1),
+        new EmptyBorder(0, 8, 0, 8)
+    ));
+}
 
-        simpanBtn.addActionListener(e -> {
-            try {
-                String produk = (String) resepCombo.getSelectedItem();
-                int resepId = resepMap.get(produk);
-                int batch = Integer.parseInt(batchField.getText());
-                double kg = Double.parseDouble(kgField.getText());
+// New compact form row creator
+private JPanel createCompactFormRow(String label, JComponent field) {
+    JPanel panel = new JPanel(new BorderLayout(5, 0)); // Reduced horizontal gap
+    panel.setBackground(LIGHT_BLUE);
+    panel.setBorder(new EmptyBorder(0, 15, 0, 15)); // Reduced side padding
+    
+    JLabel lbl = new JLabel(label);
+    lbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    lbl.setForeground(MIDNIGHT_BLUE);
+    lbl.setPreferredSize(new Dimension(70, 20)); // Fixed label width
+    
+    panel.add(lbl, BorderLayout.WEST);
+    panel.add(field, BorderLayout.CENTER);
+    
+    return panel;
+}
 
-                boolean success = controller.prosesInputProduksi(resepId, produk, batch, kg);
-                if (success) {
-                    JOptionPane.showMessageDialog(this, "Produksi berhasil disimpan.");
-                    inputPanel.setVisible(false);
-                    loadData();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Stok bahan baku tidak mencukupi.");
+private void updateKgValue() {
+    try {
+        int batch = Integer.parseInt(batchField.getText());
+        kgField.setText((batch * 12) + " kg"); // 1 batch = 12 kg
+    } catch (NumberFormatException e) {
+        kgField.setText("0 kg");
+    }
+}
+
+    private void clearForm() {
+        batchField.setText("");
+        kgField.setText("0 kg");
+        produkCombo.setSelectedIndex(0);
+        pekerjaCombo.setSelectedIndex(0);
+    }
+
+    private void styleTable() {
+        table.setShowGrid(true);
+        table.setGridColor(MIDNIGHT_BLUE);
+        table.setRowHeight(30);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        
+        // Header styling
+        JTableHeader header = table.getTableHeader();
+        header.setBackground(MIDNIGHT_BLUE);
+        header.setForeground(MIDNIGHT_BLUE);
+        header.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        
+        // Cell styling
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+                
+                Component c = super.getTableCellRendererComponent(table, value, 
+                    isSelected, hasFocus, row, column);
+                c.setBackground(LIGHT_BLUE);
+                c.setForeground(BLACK);
+                if (column >= 3) { // Right-align numeric columns
+                    ((JLabel)c).setHorizontalAlignment(JLabel.RIGHT);
                 }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Input tidak valid.");
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Gagal menyimpan produksi: " + ex.getMessage());
+                return c;
             }
         });
+        table.setBackground(WHITE);
+        table.setFillsViewportHeight(true);
+    }
+    
+    class CircleButton extends JButton {
+        public CircleButton(String text) {
+            super(text);
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setOpaque(false);
+            setBackground(MIDNIGHT_BLUE);
+            setForeground(WHITE);
+            setFont(new Font("Segoe UI", Font.BOLD, 20));
+        }
 
-        // Rangkai komponen
-        panel.add(closeBtn);
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(title);
-        panel.add(Box.createVerticalStrut(20));
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D)g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            if (getModel().isArmed()) {
+                g2.setColor(getBackground().darker());
+            } else {
+                g2.setColor(getBackground());
+            }
+            g2.fillOval(0, 0, getSize().width-1, getSize().height-1);
+            super.paintComponent(g2);
+            g2.dispose();
+        }
 
-        int fieldHeight = 30;
-
-JLabel labelProduk = new JLabel("Produk:");
-labelProduk.setAlignmentX(Component.LEFT_ALIGNMENT);
-resepCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, fieldHeight));
-
-JLabel labelBatch = new JLabel("Jumlah Batch:");
-labelBatch.setAlignmentX(Component.LEFT_ALIGNMENT);
-batchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, fieldHeight));
-
-JLabel labelKg = new JLabel("Total Kilogram:");
-labelKg.setAlignmentX(Component.LEFT_ALIGNMENT);
-kgField.setMaximumSize(new Dimension(Integer.MAX_VALUE, fieldHeight));
-
-simpanBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-simpanBtn.setPreferredSize(new Dimension(100, 35));
-
-panel.add(labelProduk);
-panel.add(Box.createVerticalStrut(5));
-panel.add(resepCombo);
-panel.add(Box.createVerticalStrut(15));
-
-panel.add(labelBatch);
-panel.add(Box.createVerticalStrut(5));
-panel.add(batchField);
-panel.add(Box.createVerticalStrut(15));
-
-panel.add(labelKg);
-panel.add(Box.createVerticalStrut(5));
-panel.add(kgField);
-panel.add(Box.createVerticalStrut(20));
-
-panel.add(simpanBtn);
-
+        @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(50, 50);
+        }
+    }
+    
+    private JPanel createFormRow(String label, JComponent field) {
+        JPanel panel = new JPanel(new BorderLayout(10, 5));
+        panel.setBackground(LIGHT_BLUE);
+        panel.setBorder(new EmptyBorder(0, 20, 0, 20));
+        
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lbl.setForeground(MIDNIGHT_BLUE);
+        
+        field.setPreferredSize(new Dimension(150, 25));
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        if (field instanceof JTextField) {
+            ((JTextField)field).setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(MIDNIGHT_BLUE, 1),
+                new EmptyBorder(3, 8, 3, 8)
+            ));
+        }
+        
+        panel.add(lbl, BorderLayout.NORTH);
+        panel.add(field, BorderLayout.CENTER);
         return panel;
     }
 
-    private void showInputPanel() {
-    inputPanel.setVisible(true);
-    
-    // Animasi slide dan snap tombol
-    Timer timer = new Timer(10, new ActionListener() {
-        int xPos = -25; // Posisi akhir (separuh masuk)
-        
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (toggleInputBtn.getX() < xPos) {
-                toggleInputBtn.setLocation(
-                    toggleInputBtn.getX() + 2, 
-                    toggleInputBtn.getY()
-                );
-            } else {
-                ((Timer)e.getSource()).stop();
-            }
-        }
-    });
-    timer.start();
-}
+    private void toggleFormPanel() {
+        formPanel.setVisible(!formPanel.isVisible());
+        revalidate();
+    }
 
     public void loadData() {
         tableModel.setRowCount(0);
         List<ProduksiModel> list = controller.getAllProduksi();
         for (ProduksiModel p : list) {
-            Object[] row = {
-                p.getId(), p.getTanggal(), p.getProduk(),
-                p.getJumlahBatch(), p.getTotalKg(), p.getJumlahKemasan()
-            };
-            tableModel.addRow(row);
+            tableModel.addRow(new Object[]{
+                p.getId(),
+                p.getTanggal(),
+                p.getProduk(),
+                p.getPekerja(),
+                p.getJumlahBatch(),
+                String.format("%.2f kg", p.getTotalKg()),
+                p.getJumlahKemasan() + " pcs"
+            });
         }
     }
-
 }

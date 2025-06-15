@@ -6,35 +6,69 @@ import java.text.SimpleDateFormat;
 
 public class FormTambahDistribusiModel {
     private Connection conn;
-    private Map<String, Integer> produkMap = new LinkedHashMap<>();
+    private Map<String, ProdukOlahan> produkMap = new LinkedHashMap<>();
     private Map<String, Customer> customerMap = new HashMap<>();
 
     public class Customer {
-        public String id;
-        public String alamat;
+        private String id;
+        private String alamat;
 
         public Customer(String id, String alamat) {
             this.id = id;
             this.alamat = alamat;
         }
+
         public String getId() {
-        return id;
+            return id;
+        }
+
+        public String getAlamat() {
+            return alamat;
+        }
     }
 
-    public String getAlamat() {
-        return alamat;
-    }
+    public class ProdukOlahan {
+        private String nama;
+        private int harga;
+        private int stok;
+
+        public ProdukOlahan(String nama, int harga, int stok) {
+            this.nama = nama;
+            this.harga = harga;
+            this.stok = stok;
+        }
+
+        public String getNama() {
+            return nama;
+        }
+
+        public int getHarga() {
+            return harga;
+        }
+
+        public int getStok() {
+            return stok;
+        }
     }
 
     public FormTambahDistribusiModel() throws SQLException {
         this.conn = DatabaseConnection.getConnection();
-        initializeProdukMap();
+        loadProdukOlahan();
     }
 
-    private void initializeProdukMap() {
-        produkMap.put("Tempura", 10000);
-        produkMap.put("Bakso Ikan", 9000);
-        produkMap.put("Otak-otak Ikan", 8000);
+    private void loadProdukOlahan() throws SQLException {
+        produkMap.clear();
+        String sql = "SELECT nama_produk, harga, stok FROM produk_olahan WHERE stok > 0";
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                String nama = rs.getString("nama_produk");
+                int harga = rs.getInt("harga");
+                int stok = rs.getInt("stok");
+                produkMap.put(nama, new ProdukOlahan(nama, harga, stok));
+            }
+        }
     }
 
     public Map<String, Customer> loadCustomerData() throws SQLException {
@@ -78,8 +112,55 @@ public class FormTambahDistribusiModel {
     public void saveDistribusi(String nomorNota, String idCustomer, String namaCustomer, 
                              String alamat, String status, String tanggal, int total, 
                              int dibayar, int kembalian, List<Map<String, Object>> items) throws SQLException {
-        // Save main distribusi record
-        String sql = "INSERT INTO distribusi (no_nota, id_customer, nama_customer, alamat, status, tanggal, total, dibayar, kembalian) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            conn.setAutoCommit(false);
+            
+            // 1. Validate stock first
+            validateStockAvailability(items);
+            
+            // 2. Save main distribusi record
+            saveMainDistribution(nomorNota, idCustomer, namaCustomer, alamat, status, tanggal, total, dibayar, kembalian);
+            
+            // 3. Save details and update stock
+            saveDistributionDetailsAndUpdateStock(nomorNota, items);
+            
+            conn.commit();
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
+            loadProdukOlahan(); // Refresh product data after update
+        }
+    }
+
+    private void validateStockAvailability(List<Map<String, Object>> items) throws SQLException {
+        for (Map<String, Object> item : items) {
+            String produk = (String) item.get("produk");
+            int jumlah = (Integer) item.get("jumlah");
+            int stokTersedia = getCurrentStockFromDB(produk);
+            
+            if (jumlah > stokTersedia) {
+                throw new SQLException("Stok " + produk + " tidak mencukupi. Stok tersedia: " + stokTersedia);
+            }
+        }
+    }
+
+    private int getCurrentStockFromDB(String namaProduk) throws SQLException {
+        String sql = "SELECT stok FROM produk_olahan WHERE nama_produk = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, namaProduk);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("stok") : 0;
+            }
+        }
+    }
+
+    private void saveMainDistribution(String nomorNota, String idCustomer, String namaCustomer,
+                                    String alamat, String status, String tanggal, int total,
+                                    int dibayar, int kembalian) throws SQLException {
+        String sql = "INSERT INTO distribusi (no_nota, id_customer, nama_customer, alamat, status, tanggal, total, dibayar, kembalian) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, nomorNota);
             stmt.setString(2, idCustomer);
@@ -92,23 +173,49 @@ public class FormTambahDistribusiModel {
             stmt.setInt(9, kembalian);
             stmt.executeUpdate();
         }
+    }
 
-        // Save detail items
-        String detailSql = "INSERT INTO detail_distribusi (no_nota, nama_produk, harga, jumlah, subtotal) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement detailStmt = conn.prepareStatement(detailSql)) {
+    private void saveDistributionDetailsAndUpdateStock(String nomorNota, List<Map<String, Object>> items) throws SQLException {
+        String detailSql = "INSERT INTO detail_distribusi (no_nota, nama_produk, harga, jumlah, subtotal) " +
+                          "VALUES (?, ?, ?, ?, ?)";
+        String updateStokSql = "UPDATE produk_olahan SET stok = stok - ? WHERE nama_produk = ?";
+        
+        try (PreparedStatement detailStmt = conn.prepareStatement(detailSql);
+             PreparedStatement updateStmt = conn.prepareStatement(updateStokSql)) {
+            
             for (Map<String, Object> item : items) {
+                String produk = (String) item.get("produk");
+                int jumlah = (Integer) item.get("jumlah");
+                
+                // Save detail
                 detailStmt.setString(1, nomorNota);
-                detailStmt.setString(2, (String) item.get("produk"));
+                detailStmt.setString(2, produk);
                 detailStmt.setInt(3, (Integer) item.get("harga"));
-                detailStmt.setInt(4, (Integer) item.get("jumlah"));
+                detailStmt.setInt(4, jumlah);
                 detailStmt.setInt(5, (Integer) item.get("subtotal"));
                 detailStmt.addBatch();
+                
+                // Update stock
+                updateStmt.setInt(1, jumlah);
+                updateStmt.setString(2, produk);
+                updateStmt.addBatch();
             }
+            
             detailStmt.executeBatch();
+            updateStmt.executeBatch();
         }
     }
 
-    public Map<String, Integer> getProdukMap() {
-        return produkMap;
+    public Map<String, ProdukOlahan> getProdukMap() {
+        return Collections.unmodifiableMap(produkMap);
+    }
+
+    public int getStokProduk(String namaProduk) {
+        try {
+            return getCurrentStockFromDB(namaProduk);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 }

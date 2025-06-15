@@ -23,144 +23,190 @@ public class DataCustomerController {
         this.view = view;
         this.user = user;
         
+        initializeController();
+    }
+
+    private void initializeController() {
         loadCustomerData();
-        initView();
-        initController();
+        setupButtonListeners();
+        setupTableSelectionListener();
+        setupSearchFunctionality();
     }
 
-    private void initView() {
-        view.setVisible(true);
+    private void loadCustomerData() {
+        try {
+            DefaultTableModel tableModel = model.loadCustomerData();
+            view.getTableCustomer().setModel(tableModel);
+        } catch (Exception e) {
+            view.showMessage("Error loading customer data: " + e.getMessage());
+        }
     }
 
-    private void initController() {
-        view.addAddButtonListener(e -> addCustomer());
-        view.addDeleteButtonListener(e -> deleteCustomer());
-        view.addEditButtonListener(e -> enableEdit());
-        view.addBackButtonListener(e -> {
-            view.dispose();
-            Distribusi2 distribusiView = new Distribusi2(user);
-            DistribusiModel distribusiModel = new DistribusiModel(); 
-            DistribusiController distribusicon = new DistribusiController(distribusiView, distribusiModel);
-            distribusiView.setVisible(true);
-        });
+    private void setupButtonListeners() {
+        // Add/Save button
+        view.addAddButtonListener(e -> handleAddCustomer());
         
+        // Delete button
+        view.addDeleteButtonListener(e -> handleDeleteCustomer());
+        
+        // Edit button
+        view.addEditButtonListener(e -> handleEditCustomer());
+        
+        // Back button
+        view.addBackButtonListener(e -> handleBackAction());
+        
+        // Search button
+        view.addSearchButtonListener(e -> handleSearch());
+    }
+
+    private void setupTableSelectionListener() {
         view.getTableCustomer().addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int row = view.getTableCustomer().getSelectedRow();
-                if (row >= 0) {
-                    view.getTextField1().setText(view.getTableCustomer().getValueAt(row, 0).toString());
-                    view.getTextField2().setText(view.getTableCustomer().getValueAt(row, 1).toString());
-                    view.getTextField3().setText(view.getTableCustomer().getValueAt(row, 2).toString());
-                    view.getTextField4().setText(view.getTableCustomer().getValueAt(row, 3).toString());
+                int selectedRow = view.getTableCustomer().getSelectedRow();
+                if (selectedRow >= 0) {
+                    populateFormFields(selectedRow);
                 }
             }
         });
-        view.addSearchButtonListener(e -> {
-        String searchText = view.getTextField5().getText().trim();
-        if (searchText.isEmpty()) {
-            // Jika kolom pencarian kosong, tampilkan semua data
-            loadCustomerData();
-        } else {
-            // Jika ada teks pencarian, lakukan pencarian
-            DefaultTableModel searchModel = model.searchCustomerByName(searchText);
-            view.getTableCustomer().setModel(searchModel);
-            
-            // Jika tidak ada hasil, tampilkan pesan
-            if (searchModel.getRowCount() == 0) {
-                view.showMessage("Data tidak ditemukan");
-            }
-        }
-    });
-         view.getSearchField().getDocument().addDocumentListener(new DocumentListener() {
-        @Override
-        public void insertUpdate(DocumentEvent e) {
-            checkAndReset();
-        }
-
-        @Override
-        public void removeUpdate(DocumentEvent e) {
-            checkAndReset();
-        }
-
-        @Override
-        public void changedUpdate(DocumentEvent e) {
-            checkAndReset();
-        }
-        
-        private void checkAndReset() {
-            if (view.getSearchField().getText().trim().isEmpty()) {
-                loadCustomerData();
-            }
-        }
-    });
     }
 
-    private void searchCustomer() {
-    String keyword = view.getSearchField().getText();
-    DefaultTableModel filteredModel = model.searchCustomerByName(keyword);
-    view.getTableCustomer().setModel(filteredModel);
-}
+    private void setupSearchFunctionality() {
+        view.getSearchField().getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                performSearch();
+            }
 
-    private void loadCustomerData() {
-        DefaultTableModel tableModel = model.loadCustomerData();
-        view.getTableCustomer().setModel(tableModel);
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                performSearch();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                performSearch();
+            }
+        });
     }
 
-    private void addCustomer() {
+    private void populateFormFields(int row) {
+        view.getTextField1().setText(view.getTableCustomer().getValueAt(row, 0).toString());
+        view.getTextField2().setText(view.getTableCustomer().getValueAt(row, 1).toString());
+        view.getTextField3().setText(view.getTableCustomer().getValueAt(row, 2).toString());
+        view.getTextField4().setText(view.getTableCustomer().getValueAt(row, 3).toString());
+    }
+
+    private void handleAddCustomer() {
         try {
-            int id = Integer.parseInt(view.getTextField1().getText());
-            String nama = view.getTextField2().getText();
-            String telp = view.getTextField3().getText();
-            String alamat = view.getTextField4().getText();
-            
+            int id = Integer.parseInt(view.getTextField1().getText().trim());
+            String nama = view.getTextField2().getText().trim();
+            String telp = view.getTextField3().getText().trim();
+            String alamat = view.getTextField4().getText().trim();
+
+            if (nama.isEmpty() || telp.isEmpty() || alamat.isEmpty()) {
+                view.showMessage("Semua field harus diisi!");
+                return;
+            }
+
             model.addCustomer(id, nama, telp, alamat);
-            view.showMessage("Data berhasil disimpan!");
+            view.showMessage("Customer berhasil ditambahkan");
+            clearForm();
             loadCustomerData();
         } catch (NumberFormatException e) {
-            view.showMessage("ID harus berupa angka!");
+            view.showMessage("ID harus berupa angka");
         } catch (SQLException e) {
-            view.showMessage("Gagal menyimpan data: " + e.getMessage());
+            view.showMessage("Error: " + e.getMessage());
         }
     }
 
-    private void deleteCustomer() {
-        int row = view.getTableCustomer().getSelectedRow();
-        if (row >= 0) {
-            int confirm = view.showConfirmDialog("Yakin mau hapus data ini?");
-            if (confirm == JOptionPane.YES_OPTION) {
-                try {
-                    int id = Integer.parseInt(view.getTableCustomer().getValueAt(row, 0).toString());
-                    model.deleteCustomer(id);
-                    loadCustomerData();
-                    view.showMessage("Data berhasil dihapus");
-                } catch (SQLException e) {
-                    view.showMessage("Gagal menghapus data: " + e.getMessage());
-                }
-            }
-        } else {
-            view.showMessage("Pilih data yang ingin dihapus");
+    private void handleDeleteCustomer() {
+        int selectedRow = view.getTableCustomer().getSelectedRow();
+        if (selectedRow < 0) {
+            view.showMessage("Pilih customer yang akan dihapus");
+            return;
         }
-    }
 
-    private void enableEdit() {
-        int row = view.getTableCustomer().getSelectedRow();
-        if (row >= 0) {
+        int confirm = view.showConfirmDialog("Yakin ingin menghapus customer ini?");
+        if (confirm == JOptionPane.YES_OPTION) {
             try {
-                int id = Integer.parseInt(view.getTableCustomer().getValueAt(row, 0).toString());
-                String nama = view.getTextField2().getText();
-                String telp = view.getTextField3().getText();
-                String alamat = view.getTextField4().getText();
-                
-                model.updateCustomer(id, nama, telp, alamat);
-                view.showMessage("Data berhasil diperbarui");
+                int id = Integer.parseInt(view.getTableCustomer().getValueAt(selectedRow, 0).toString());
+                model.deleteCustomer(id);
+                view.showMessage("Customer berhasil dihapus");
                 loadCustomerData();
+                clearForm();
             } catch (SQLException e) {
-                view.showMessage("Gagal memperbarui data: " + e.getMessage());
+                view.showMessage("Error: " + e.getMessage());
             }
-        } else {
-            view.showMessage("Pilih data yang ingin diubah!");
         }
     }
-    
+
+    private void handleEditCustomer() {
+        int selectedRow = view.getTableCustomer().getSelectedRow();
+        if (selectedRow < 0) {
+            view.showMessage("Pilih customer yang akan diubah");
+            return;
+        }
+
+        try {
+            int id = Integer.parseInt(view.getTextField1().getText().trim());
+            String nama = view.getTextField2().getText().trim();
+            String telp = view.getTextField3().getText().trim();
+            String alamat = view.getTextField4().getText().trim();
+
+            model.updateCustomer(id, nama, telp, alamat);
+            view.showMessage("Data customer berhasil diupdate");
+            loadCustomerData();
+        } catch (SQLException e) {
+            view.showMessage("Error: " + e.getMessage());
+        }
+    }
+
+    private void handleBackAction() {
+        view.dispose();
+        try {
+        Distribusi2 distribusiView = new Distribusi2(user);
+        DistribusiModel distribusiModel = new DistribusiModel();
+        new DistribusiController(distribusiView, distribusiModel, user);
+        distribusiView.setVisible(true);
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(view, 
+            "Gagal terhubung ke database: " + e.getMessage(), 
+            "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    }
+
+    private void handleSearch() {
+        String keyword = view.getSearchField().getText().trim();
+        if (keyword.isEmpty()) {
+            loadCustomerData();
+            return;
+        }
+
+        try {
+            DefaultTableModel searchResult = model.searchCustomerByName(keyword);
+            view.getTableCustomer().setModel(searchResult);
+            
+            if (searchResult.getRowCount() == 0) {
+                view.showMessage("Tidak ditemukan customer dengan nama '" + keyword + "'");
+            }
+        } catch (Exception e) {
+            view.showMessage("Error saat mencari: " + e.getMessage());
+        }
+    }
+
+    private void performSearch() {
+        if (view.getSearchField().getText().trim().isEmpty()) {
+            loadCustomerData();
+        } else {
+            handleSearch();
+        }
+    }
+
+    private void clearForm() {
+        view.getTextField1().setText("");
+        view.getTextField2().setText("");
+        view.getTextField3().setText("");
+        view.getTextField4().setText("");
+    }
 }

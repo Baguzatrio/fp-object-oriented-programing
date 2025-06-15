@@ -1,13 +1,13 @@
 package controller;
 
-import view.page0;
+import view.Landing;
 import view.Login;
 import view.Register;
 
 public class page0controller {
-    private page0 view;
+    private Landing view;
     
-    public page0controller(page0 view) {
+    public page0controller(Landing view) {
         this.view = view;
         
         this.view.addLoginListener(e -> bukaLogin());
@@ -15,9 +15,11 @@ public class page0controller {
     }
     
     private void bukaLogin() {
-        new Login().setVisible(true);
-        view.dispose();
-    }
+    Login login = new Login();
+    new LoginController(login); // Add this line to attach controller
+    login.setVisible(true);
+    view.dispose();
+}
     
     private void bukaSignup()  {
         new Register().setVisible(true);

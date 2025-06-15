@@ -6,12 +6,17 @@ public class BahanBakuModel {
     private double stok;
     private String satuan;
     private double hargaPerUnit;
-    private String tanggalBeli; // bisa pakai String atau java.sql.Date sesuai kebutuhan
+    private String tanggalBeli;
     private String tanggalKadaluarsa;
+    private double beratPerUnit; // in kg
 
-    public BahanBakuModel() {}
+    public BahanBakuModel() {
+        this.beratPerUnit = 1.0; // Nilai default 1 kg
+    }
 
-    public BahanBakuModel(int id, String nama, double stok, String satuan, double hargaPerUnit, String tanggalBeli, String tanggalKadaluarsa) {
+    public BahanBakuModel(int id, String nama, double stok, String satuan, 
+                         double hargaPerUnit, String tanggalBeli, 
+                         String tanggalKadaluarsa, double beratPerUnit) {
         this.id = id;
         this.nama = nama;
         this.stok = stok;
@@ -19,6 +24,7 @@ public class BahanBakuModel {
         this.hargaPerUnit = hargaPerUnit;
         this.tanggalBeli = tanggalBeli;
         this.tanggalKadaluarsa = tanggalKadaluarsa;
+        this.beratPerUnit = beratPerUnit;
     }
 
     // Getter & Setter
@@ -42,4 +48,16 @@ public class BahanBakuModel {
 
     public String getTanggalKadaluarsa() { return tanggalKadaluarsa; }
     public void setTanggalKadaluarsa(String tanggalKadaluarsa) { this.tanggalKadaluarsa = tanggalKadaluarsa; }
+    
+    public double getBeratPerUnit() { return beratPerUnit; }
+    public void setBeratPerUnit(double beratPerUnit) { this.beratPerUnit = beratPerUnit; }
+    
+    // Method untuk menghitung total secara dinamis
+    public double getTotalBerat() {
+        return stok * beratPerUnit;
+    }
+    
+    public double getTotalHarga() {
+        return stok * hargaPerUnit;
+    }
 }

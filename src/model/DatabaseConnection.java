@@ -5,21 +5,16 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
-    private static Connection connection;
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/db_ilb?useSSL=false&autoReconnect=true";
+    private static final String USER = "root";
+    private static final String PASS = "";
 
     public static Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            try {
-                Class.forName("com.mysql.cj.jdbc.Driver");
-                String url = "jdbc:mysql://localhost:3306/db_fppbo";
-                String user = "root";
-                String pass = "";
-
-                connection = DriverManager.getConnection(url, user, pass);
-            } catch (ClassNotFoundException e) {
-                System.out.println("Driver tidak ditemukan: " + e.getMessage());
-            }
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            return DriverManager.getConnection(DB_URL, USER, PASS);
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("MySQL Driver not found", e);
         }
-        return connection;
     }
 }

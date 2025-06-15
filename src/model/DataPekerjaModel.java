@@ -10,10 +10,10 @@ public class DataPekerjaModel {
     private Date mulaiBekerja;
     private String noTelp;
     private String alamat;
-    
+
     // Constructors
     public DataPekerjaModel() {}
-    
+
     public DataPekerjaModel(int id, String nama, Date mulaiBekerja, String noTelp, String alamat) {
         this.id = id;
         this.nama = nama;
@@ -21,79 +21,24 @@ public class DataPekerjaModel {
         this.noTelp = noTelp;
         this.alamat = alamat;
     }
-    
-    // Getters and Setters
+
+    // Getters and Setters remain the same
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
+
     public String getNama() { return nama; }
     public void setNama(String nama) { this.nama = nama; }
+
     public Date getMulaiBekerja() { return mulaiBekerja; }
     public void setMulaiBekerja(Date mulaiBekerja) { this.mulaiBekerja = mulaiBekerja; }
+
     public String getNoTelp() { return noTelp; }
     public void setNoTelp(String noTelp) { this.noTelp = noTelp; }
+
     public String getAlamat() { return alamat; }
     public void setAlamat(String alamat) { this.alamat = alamat; }
 
-    // CRUD Operations
-    public boolean save() {
-        return this.id == 0 ? insert() : update();
-    }
-    
-    private boolean insert() {
-        String sql = "INSERT INTO pekerja (nama, mulai_bekerja, no_telp, alamat) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            
-            setParameters(pstmt);
-            int affectedRows = pstmt.executeUpdate();
-            
-            if (affectedRows > 0) {
-                try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    if (rs.next()) this.id = rs.getInt(1);
-                }
-                return true;
-            }
-        } catch (SQLException ex) {
-            System.err.println("Error inserting data: " + ex.getMessage());
-        }
-        return false;
-    }
-    
-    private boolean update() {
-        String sql = "UPDATE pekerja SET nama=?, mulai_bekerja=?, no_telp=?, alamat=? WHERE id=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            setParameters(pstmt);
-            pstmt.setInt(5, this.id);
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException ex) {
-            System.err.println("Error updating data: " + ex.getMessage());
-        }
-        return false;
-    }
-    
-    public boolean delete() {
-        String sql = "DELETE FROM pekerja WHERE id=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setInt(1, this.id);
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException ex) {
-            System.err.println("Error deleting data: " + ex.getMessage());
-        }
-        return false;
-    }
-    
-    private void setParameters(PreparedStatement pstmt) throws SQLException {
-        pstmt.setString(1, this.nama);
-        pstmt.setDate(2, new java.sql.Date(this.mulaiBekerja.getTime()));
-        pstmt.setString(3, this.noTelp);
-        pstmt.setString(4, this.alamat);
-    }
-    
-    // Static Methods
+    // CRUD Operations remain the same
     public static List<DataPekerjaModel> getAll() {
         List<DataPekerjaModel> list = new ArrayList<>();
         String sql = "SELECT * FROM pekerja";
@@ -103,52 +48,121 @@ public class DataPekerjaModel {
              ResultSet rs = stmt.executeQuery(sql)) {
             
             while (rs.next()) {
-                list.add(new DataPekerjaModel(
-                    rs.getInt("id"),
-                    rs.getString("nama"),
-                    rs.getDate("mulai_bekerja"),
-                    rs.getString("no_telp"),
-                    rs.getString("alamat")
-                ));
+                DataPekerjaModel pekerja = new DataPekerjaModel();
+                pekerja.setId(rs.getInt("id"));
+                pekerja.setNama(rs.getString("nama"));
+                pekerja.setMulaiBekerja(rs.getDate("mulai_bekerja"));
+                pekerja.setNoTelp(rs.getString("no_telp"));
+                pekerja.setAlamat(rs.getString("alamat"));
+                list.add(pekerja);
             }
-        } catch (SQLException ex) {
-            System.err.println("Error fetching all data: " + ex.getMessage());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return list;
     }
-    
+
     public static DataPekerjaModel findById(int id) {
-        String sql = "SELECT * FROM pekerja WHERE id=?";
+        String sql = "SELECT * FROM pekerja WHERE id = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            pstmt.setInt(1, id);
-            try (ResultSet rs = pstmt.executeQuery()) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return new DataPekerjaModel(
-                        rs.getInt("id"),
-                        rs.getString("nama"),
-                        rs.getDate("mulai_bekerja"),
-                        rs.getString("no_telp"),
-                        rs.getString("alamat")
-                    );
+                    DataPekerjaModel pekerja = new DataPekerjaModel();
+                    pekerja.setId(rs.getInt("id"));
+                    pekerja.setNama(rs.getString("nama"));
+                    pekerja.setMulaiBekerja(rs.getDate("mulai_bekerja"));
+                    pekerja.setNoTelp(rs.getString("no_telp"));
+                    pekerja.setAlamat(rs.getString("alamat"));
+                    return pekerja;
                 }
             }
-        } catch (SQLException ex) {
-            System.err.println("Error finding by ID: " + ex.getMessage());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return null;
     }
-    
-    // Utility Method for View
-    public Object[] toTableRow() {
-        return new Object[] {
-            this.id,
-            this.nama,
-            this.mulaiBekerja,
-            this.noTelp,
-            this.alamat
-        };
+
+    public boolean save() {
+        String sql;
+        boolean isInsert = (id == 0);
+        
+        if (isInsert) {
+            sql = "INSERT INTO pekerja (nama, mulai_bekerja, no_telp, alamat) VALUES (?, ?, ?, ?)";
+        } else {
+            sql = "UPDATE pekerja SET nama = ?, mulai_bekerja = ?, no_telp = ?, alamat = ? WHERE id = ?";
+        }
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
+            stmt.setString(1, nama);
+            stmt.setDate(2, mulaiBekerja);
+            stmt.setString(3, noTelp);
+            stmt.setString(4, alamat);
+            
+            if (!isInsert) {
+                stmt.setInt(5, id);
+            }
+            
+            int affectedRows = stmt.executeUpdate();
+            
+            if (isInsert && affectedRows > 0) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        id = rs.getInt(1);
+                    }
+                }
+            }
+            
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean delete() {
+        if (id == 0) return false;
+        
+        String sql = "DELETE FROM pekerja WHERE id = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static List<DataPekerjaModel> searchByName(String name) {
+        List<DataPekerjaModel> list = new ArrayList<>();
+        String sql = "SELECT * FROM pekerja WHERE nama LIKE ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, "%" + name + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    DataPekerjaModel pekerja = new DataPekerjaModel();
+                    pekerja.setId(rs.getInt("id"));
+                    pekerja.setNama(rs.getString("nama"));
+                    pekerja.setMulaiBekerja(rs.getDate("mulai_bekerja"));
+                    pekerja.setNoTelp(rs.getString("no_telp"));
+                    pekerja.setAlamat(rs.getString("alamat"));
+                    list.add(pekerja);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

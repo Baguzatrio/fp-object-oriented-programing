@@ -26,7 +26,7 @@ public class User {
         return password; 
     }
     public String getNama() {
-        return nama;
+        return nama != null ? nama : username; // Fallback ke username jika nama null
     }
     public boolean isDrawerVisible() {
         return drawerVisible;

@@ -10,7 +10,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
-
 public class FormTambahDistribusi2 extends JFrame {
     // Color Palette
     private static final Color MIDNIGHT_BLUE = new Color(25, 42, 86);
@@ -18,6 +17,7 @@ public class FormTambahDistribusi2 extends JFrame {
     private static final Color LIGHT_BLUE = new Color(173, 216, 230);
     private static final Color WHITE = Color.WHITE;
     private static final Color DARK_TEXT = new Color(51, 51, 51);
+    private static final Color ERROR_RED = new Color(220, 53, 69);
     
     // Fonts
     private static final Font HEADER_FONT = new Font("Segoe UI", Font.BOLD, 18);
@@ -30,33 +30,43 @@ public class FormTambahDistribusi2 extends JFrame {
     private JPanel headerPanel;
     private JLabel titleLabel;
     private JLabel customerLabel, idLabel, notaLabel, tanggalLabel, alamatLabel;
-    private JLabel totalLabel, bayarLabel, kembaliLabel;
-    private JTextField customerField, idField, notaField, tanggalField;
-    private JTextField totalField, bayarField, kembaliField;
+    private JLabel totalLabel, bayarLabel, kembaliLabel, ongkirLabel;
+    public JTextField customerField, idField, notaField, tanggalField;
+    private JTextField totalField, bayarField, kembaliField, ongkirField;
     private JTextPane alamatPane;
     private JScrollPane tableScrollPane, alamatScrollPane;
     private JTable distribusiTable;
-    private JButton simpanButton, kembaliButton, cetakButton;
+    private JButton simpanButton, kembaliButton, cetakButton, kelolaOngkirButton;
+    private JComboBox<String> ongkirCombo;
     
     // Data
-    private FormTambahDistribusiController controller;
     private DefaultTableModel tableModel;
     private Map<String, Customer> customerMap = new HashMap<>();
+    private FormTambahDistribusiController controller;
 
     public FormTambahDistribusi2() {
         initComponents();
-        setupController();
         applyStyles();
-        initializeForm();
+        setupAutocomplete();
+        setupOngkirCombo();
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        this.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                if (controller != null) {
+                    controller.handleWindowClosed();
+                }
+            }
+        });
     }
 
     private void initComponents() {
         setTitle("Tambah Distribusi");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(700, 550); // Slightly smaller form
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(800, 600);
         setLocationRelativeTo(null);
         
-        // Main Panel with nice background
+        // Main Panel
         mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
         mainPanel.setBackground(WHITE);
@@ -68,7 +78,7 @@ public class FormTambahDistribusi2 extends JFrame {
         
         titleLabel = new JLabel("TAMBAH PENJUALAN", JLabel.CENTER);
         
-        // Customer Info Panel - using GridBagLayout for better control
+        // Customer Info Panel
         JPanel customerPanel = new JPanel(new GridBagLayout());
         customerPanel.setBackground(WHITE);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -90,6 +100,7 @@ public class FormTambahDistribusi2 extends JFrame {
         
         gbc.gridx = 3;
         tanggalField = createSmallField();
+        tanggalField.setEditable(false);
         customerPanel.add(tanggalField, gbc);
         
         // Row 1
@@ -99,6 +110,7 @@ public class FormTambahDistribusi2 extends JFrame {
         
         gbc.gridx = 1;
         idField = createSmallField();
+        idField.setEditable(false);
         customerPanel.add(idField, gbc);
         
         gbc.gridx = 2;
@@ -107,9 +119,10 @@ public class FormTambahDistribusi2 extends JFrame {
         
         gbc.gridx = 3;
         notaField = createSmallField();
+        notaField.setEditable(false);
         customerPanel.add(notaField, gbc);
         
-        // Row 2 - Address (bigger field)
+        // Row 2 - Address
         gbc.gridx = 0; gbc.gridy = 2;
         alamatLabel = new JLabel("Alamat");
         customerPanel.add(alamatLabel, gbc);
@@ -128,10 +141,13 @@ public class FormTambahDistribusi2 extends JFrame {
         tableModel = new DefaultTableModel(
             new Object[]{"No.", "Nama Produk", "Harga Satuan", "Jumlah", "Subtotal"}, 0
         ) {
-            @Override public boolean isCellEditable(int row, int column) {
+            @Override 
+            public boolean isCellEditable(int row, int column) {
                 return column == 1 || column == 3;
             }
-            @Override public Class<?> getColumnClass(int columnIndex) {
+            
+            @Override 
+            public Class<?> getColumnClass(int columnIndex) {
                 if (columnIndex == 2 || columnIndex == 3 || columnIndex == 4) {
                     return Integer.class;
                 }
@@ -159,26 +175,57 @@ public class FormTambahDistribusi2 extends JFrame {
         totalLabel = new JLabel("TOTAL");
         bayarLabel = new JLabel("BAYAR");
         kembaliLabel = new JLabel("KEMBALI");
+        ongkirLabel = new JLabel("Ongkos Kirim");
         
         totalField = createSmallField();
         bayarField = createSmallField();
         kembaliField = createSmallField();
+        ongkirField = createSmallField();
         
         totalField.setEditable(false);
         kembaliField.setEditable(false);
+        ongkirField.setEditable(false);
         
         paymentPanel.add(createLabelFieldPanel(totalLabel, totalField));
         paymentPanel.add(Box.createVerticalStrut(8));
         paymentPanel.add(createLabelFieldPanel(bayarLabel, bayarField));
         paymentPanel.add(Box.createVerticalStrut(8));
         paymentPanel.add(createLabelFieldPanel(kembaliLabel, kembaliField));
+        paymentPanel.add(Box.createVerticalStrut(8));
+        
+        // Ongkir Panel
+        JPanel ongkirPanel = new JPanel(new BorderLayout(5, 5));
+        ongkirPanel.setBackground(WHITE);
+        
+        ongkirCombo = new JComboBox<>();
+        ongkirCombo.addItem("Gratis (Tidak ada ongkir)");
+        
+        kelolaOngkirButton = new JButton("...");
+kelolaOngkirButton.setPreferredSize(new Dimension(30, 25));
+kelolaOngkirButton.addActionListener(e -> {
+    if (controller != null) {
+        controller.handleKelolaOngkir();
+    } else {
+        JOptionPane.showMessageDialog(this, "Controller belum diinisialisasi", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+});
+        
+        JPanel ongkirInputPanel = new JPanel(new BorderLayout(5, 5));
+        ongkirInputPanel.add(ongkirCombo, BorderLayout.CENTER);
+        ongkirInputPanel.add(kelolaOngkirButton, BorderLayout.EAST);
+        
+        ongkirPanel.add(ongkirLabel, BorderLayout.WEST);
+        ongkirPanel.add(ongkirInputPanel, BorderLayout.CENTER);
+        ongkirPanel.add(ongkirField, BorderLayout.EAST);
+        
+        paymentPanel.add(ongkirPanel);
         
         // Button Panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setBackground(WHITE);
         
-        simpanButton = new JButton("SIMPAN");
         kembaliButton = new JButton("KEMBALI");
+        simpanButton = new JButton("SIMPAN");
         cetakButton = new JButton("CETAK");
         
         buttonPanel.add(kembaliButton);
@@ -196,10 +243,44 @@ public class FormTambahDistribusi2 extends JFrame {
         add(mainPanel);
     }
     
+    private void setupOngkirCombo() {
+        ongkirCombo.addActionListener(e -> {
+            String selected = (String) ongkirCombo.getSelectedItem();
+            if (selected != null) {
+                if (selected.equals("Gratis (Tidak ada ongkir)")) {
+                    ongkirField.setText("0");
+                } else {
+                    // Extract the cost from the selected item
+                    String[] parts = selected.split(" - Rp");
+                    if (parts.length > 1) {
+                        ongkirField.setText(parts[1]);
+                    }
+                }
+                updateTotalDanKembalian();
+            }
+        });
+    }
+    
+    public void loadOngkirData(String[] ongkirOptions) {
+        ongkirCombo.removeAllItems();
+        ongkirCombo.addItem("Gratis (Tidak ada ongkir)");
+        for (String option : ongkirOptions) {
+            ongkirCombo.addItem(option);
+        }
+    }
+    
+    public int getSelectedOngkir() {
+        try {
+            return Integer.parseInt(ongkirField.getText());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+    
     private JTextField createSmallField() {
         JTextField field = new JTextField();
-        field.setPreferredSize(new Dimension(120, 25)); // Smaller size
-        field.setMaximumSize(new Dimension(120, 25));
+        field.setPreferredSize(new Dimension(150, 30));
+        field.setMaximumSize(new Dimension(150, 30));
         return field;
     }
     
@@ -208,26 +289,8 @@ public class FormTambahDistribusi2 extends JFrame {
         panel.setBackground(WHITE);
         panel.add(label, BorderLayout.WEST);
         panel.add(field, BorderLayout.CENTER);
-        field.setPreferredSize(new Dimension(120, 25));
+        field.setPreferredSize(new Dimension(150, 30));
         return panel;
-    }
-    
-    private void setupController() {
-        this.controller = new FormTambahDistribusiController(this);
-        
-        simpanButton.addActionListener(e -> controller.handleSaveButton());
-        kembaliButton.addActionListener(e -> controller.handleBackToDistribusi());
-        
-        distribusiTable.getModel().addTableModelListener(e -> {
-            controller.handleTableUpdate(e);
-            updateTotalDanKembalian();
-        });
-        
-        bayarField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { updateTotalDanKembalian(); }
-            public void removeUpdate(DocumentEvent e) { updateTotalDanKembalian(); }
-            public void changedUpdate(DocumentEvent e) {}
-        });
     }
     
     private void applyStyles() {
@@ -237,17 +300,17 @@ public class FormTambahDistribusi2 extends JFrame {
         
         // Labels
         Component[] labels = {customerLabel, idLabel, notaLabel, tanggalLabel, 
-                            alamatLabel, totalLabel, bayarLabel, kembaliLabel};
+                            alamatLabel, totalLabel, bayarLabel, kembaliLabel, ongkirLabel};
         for (Component label : labels) {
             ((JLabel)label).setFont(LABEL_FONT);
             ((JLabel)label).setForeground(DARK_TEXT);
         }
         
         // Buttons
-        JButton[] buttons = {simpanButton, kembaliButton, cetakButton};
+        JButton[] buttons = {simpanButton, kembaliButton, cetakButton, kelolaOngkirButton};
         for (JButton button : buttons) {
             button.setFont(BUTTON_FONT);
-            button.setBorder(new EmptyBorder(8, 15, 8, 15));
+            button.setBorder(new EmptyBorder(5, 10, 5, 10));
             button.setFocusPainted(false);
         }
         
@@ -260,9 +323,22 @@ public class FormTambahDistribusi2 extends JFrame {
         cetakButton.setBackground(MIDNIGHT_BLUE);
         cetakButton.setForeground(WHITE);
         
+        kelolaOngkirButton.setFont(BUTTON_FONT);
+kelolaOngkirButton.setBackground(LIGHT_BLUE);
+kelolaOngkirButton.setForeground(MIDNIGHT_BLUE);
+kelolaOngkirButton.setBorder(new EmptyBorder(5, 10, 5, 10));
+kelolaOngkirButton.setFocusPainted(false);
+        
+        // ComboBox
+        ongkirCombo.setFont(FIELD_FONT);
+        ongkirCombo.setBorder(new CompoundBorder(
+            new LineBorder(LIGHT_BLUE, 1),
+            new EmptyBorder(5, 8, 5, 8)
+        ));
+        
         // Text fields
         Component[] textFields = {customerField, idField, notaField, tanggalField, 
-                                totalField, bayarField, kembaliField};
+                                totalField, bayarField, kembaliField, ongkirField};
         for (Component field : textFields) {
             ((JTextField)field).setFont(FIELD_FONT);
             ((JTextField)field).setBorder(new CompoundBorder(
@@ -288,12 +364,6 @@ public class FormTambahDistribusi2 extends JFrame {
             new EmptyBorder(5, 8, 5, 8)
         ));
         alamatPane.setBackground(WHITE);
-    }
-    
-    private void initializeForm() {
-        setupAutocomplete();
-        simpanButton.setEnabled(false);
-        controller.loadCustomerData();
     }
     
     private void setupAutocomplete() {
@@ -344,22 +414,33 @@ public class FormTambahDistribusi2 extends JFrame {
     }
     
     public void updateTotalDanKembalian() {
-        int total = controller.calculateTotal(tableModel);
-        totalField.setText(String.valueOf(total));
-        
         try {
-            int dibayar = Integer.parseInt(bayarField.getText());
+            int totalProduk = 0;
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                Object value = tableModel.getValueAt(i, 4);
+                if (value instanceof Integer) {
+                    totalProduk += (Integer) value;
+                }
+            }
+            
+            int ongkir = ongkirField.getText().isEmpty() ? 0 : Integer.parseInt(ongkirField.getText());
+            int total = totalProduk + ongkir;
+            totalField.setText(String.valueOf(total));
+            
+            int dibayar = bayarField.getText().isEmpty() ? 0 : Integer.parseInt(bayarField.getText());
             int kembalian = dibayar - total;
             kembaliField.setText(String.valueOf(kembalian));
-            kembaliField.setForeground(kembalian < 0 ? Color.RED : MIDNIGHT_BLUE);
+            kembaliField.setForeground(kembalian < 0 ? ERROR_RED : MIDNIGHT_BLUE);
+            
+            simpanButton.setEnabled(totalProduk > 0 && !customerField.getText().isEmpty());
         } catch (NumberFormatException e) {
             kembaliField.setText("0");
             kembaliField.setForeground(MIDNIGHT_BLUE);
+            simpanButton.setEnabled(false);
         }
-        simpanButton.setEnabled(total > 0);
     }
     
-    // All original getter methods preserved
+    // Getters
     public JTextField getTextFieldNoNota() { return notaField; }
     public JTextField getTextFieldIdCustomer() { return idField; }
     public JTextPane getTextPaneAlamat() { return alamatPane; }
@@ -367,10 +448,14 @@ public class FormTambahDistribusi2 extends JFrame {
     public JTextField getTextFieldTotal() { return totalField; }
     public JTextField getTextFieldDibayar() { return bayarField; }
     public JTextField getTextFieldKembalian() { return kembaliField; }
-    public JComboBox<String> getComboBoxNama() { return new JComboBox<>(); }
+    public JTextField getOngkirField() { return ongkirField; }
+    public JComboBox<String> getOngkirCombo() { return ongkirCombo; }
     public DefaultTableModel getTableModel() { return tableModel; }
     public JTable getTabelDistribusi() { return distribusiTable; }
     public JButton getBtnCetakNota() { return cetakButton; }
+    public JButton getSimpanButton() { return simpanButton; }
+    public JButton getKembaliButton() { return kembaliButton; }
+    public JButton getKelolaOngkirButton() { return kelolaOngkirButton; }
     
     public String getNomorNota() { return notaField.getText(); }
     public String getNamaCustomer() { return customerField.getText(); }
@@ -386,5 +471,13 @@ public class FormTambahDistribusi2 extends JFrame {
     
     public Map<String, Customer> getCustomerMap() {
         return customerMap;
+    }
+    
+    public void setController(FormTambahDistribusiController controller) {
+        this.controller = controller;
+    }
+    
+    public JTextField getCustomerField() {
+        return customerField;
     }
 }

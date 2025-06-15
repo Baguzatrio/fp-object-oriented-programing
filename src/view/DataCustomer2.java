@@ -9,6 +9,8 @@ import model.DataCustomerModel;
 import model.User;
 
 public class DataCustomer2 extends JFrame {
+    private static final Color DARK_BLUE = new Color(25, 42, 86);
+    private static final Color LIGHT_BLUE = new Color(135, 206, 235);
     // Components
     private JTable tableCustomer;
     private JTextField txtId, txtNama, txtNoTelp, txtAlamat, txtSearch;
@@ -29,13 +31,9 @@ public class DataCustomer2 extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
-                Color color1 = new Color(240, 248, 255); // AliceBlue
-                Color color2 = new Color(230, 230, 250); // Lavender
-                int w = getWidth();
-                int h = getHeight();
-                GradientPaint gp = new GradientPaint(0, 0, color1, w, h, color2);
+                GradientPaint gp = new GradientPaint(0, 0, DARK_BLUE, getWidth(), getHeight(), LIGHT_BLUE);
                 g2d.setPaint(gp);
-                g2d.fillRect(0, 0, w, h);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         };
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
@@ -43,25 +41,36 @@ public class DataCustomer2 extends JFrame {
         // Title
         JLabel lblTitle = new JLabel("DATA CUSTOMER", SwingConstants.CENTER);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        lblTitle.setForeground(new Color(70, 130, 180)); // SteelBlue
+        lblTitle.setForeground(Color.WHITE); // SteelBlue
         lblTitle.setBorder(new EmptyBorder(0, 0, 20, 0));
         mainPanel.add(lblTitle, BorderLayout.NORTH);
         
         // Center content panel
         JPanel centerPanel = new JPanel(new BorderLayout(20, 20));
+        centerPanel.setOpaque(false);
         
         // Form panel
         JPanel formPanel = createFormPanel();
+        formPanel.setBackground(new Color(173, 216, 230, 150));
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(DARK_BLUE, 2),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)));
         centerPanel.add(formPanel, BorderLayout.WEST);
         
         // Table panel
         JPanel tablePanel = createTablePanel();
+        tablePanel.setBackground(new Color(255, 255, 255, 200));
+        tablePanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(DARK_BLUE, 2),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)));
         centerPanel.add(tablePanel, BorderLayout.CENTER);
         
         mainPanel.add(centerPanel, BorderLayout.CENTER);
         
         // Bottom button panel
         JPanel bottomPanel = createBottomPanel();
+        bottomPanel.setOpaque(false);
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
         
         setContentPane(mainPanel);
@@ -77,7 +86,7 @@ public class DataCustomer2 extends JFrame {
                 TitledBorder.LEFT,
                 TitledBorder.TOP,
                 new Font("Segoe UI", Font.BOLD, 14),
-                new Color(70, 130, 180)
+                Color.WHITE
             ),
             new EmptyBorder(10, 10, 10, 10)
         ));
@@ -93,6 +102,7 @@ public class DataCustomer2 extends JFrame {
         // ID
         JLabel lblId = new JLabel("ID:");
         lblId.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblId.setForeground(Color.WHITE);
         txtId = createStyledTextField(false);
         rows[0].add(lblId);
         rows[0].add(txtId);
@@ -100,6 +110,7 @@ public class DataCustomer2 extends JFrame {
         // Nama
         JLabel lblNama = new JLabel("Nama:");
         lblNama.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblNama.setForeground(Color.WHITE);
         txtNama = createStyledTextField(true);
         rows[1].add(lblNama);
         rows[1].add(txtNama);
@@ -107,6 +118,7 @@ public class DataCustomer2 extends JFrame {
         // No. Telp
         JLabel lblNoTelp = new JLabel("No. Telp:");
         lblNoTelp.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblNoTelp.setForeground(Color.WHITE);
         txtNoTelp = createStyledTextField(true);
         rows[2].add(lblNoTelp);
         rows[2].add(txtNoTelp);
@@ -114,6 +126,7 @@ public class DataCustomer2 extends JFrame {
         // Alamat
         JLabel lblAlamat = new JLabel("Alamat:");
         lblAlamat.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblAlamat.setForeground(Color.WHITE);
         txtAlamat = createStyledTextField(true);
         rows[3].add(lblAlamat);
         rows[3].add(txtAlamat);
@@ -148,7 +161,7 @@ public class DataCustomer2 extends JFrame {
                 TitledBorder.LEFT,
                 TitledBorder.TOP,
                 new Font("Segoe UI", Font.BOLD, 14),
-                new Color(70, 130, 180)
+                Color.WHITE
             ),
             new EmptyBorder(10, 10, 10, 10)
         ));

@@ -38,7 +38,7 @@ public class LoginController {
     public class RegisterListener implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
-        view.goToPage2();  // Pastikan ada method goToPage2() di page1
+        view.goToRegister();  // Pastikan ada method goToPage2() di page1
     }
 }    
 }

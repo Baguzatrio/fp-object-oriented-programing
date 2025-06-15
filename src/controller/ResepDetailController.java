@@ -1,19 +1,39 @@
 package controller;
 
+import model.ResepDAO;
 import model.ResepDetailDAO;
-import model.ResepDetailModel;
-
 import java.util.List;
+import model.ResepDetailModel;
+import model.ResepModel;
 
 public class ResepDetailController {
-    private ResepDetailDAO dao = new ResepDetailDAO();
+    private ResepDetailDAO resepDetailDAO;
+    private ResepDAO resepDAO;
 
-    public List<ResepDetailModel> getDetailByResepId(int resepId) {
-        return dao.getByResepId(resepId);
+    public ResepDetailController() {
+        this.resepDetailDAO = new ResepDetailDAO();
+        this.resepDAO = new ResepDAO();
     }
 
-    public boolean tambahDetail(int resepId, int bahanId, double jumlah) {
-        return dao.insert(resepId, bahanId, jumlah);
+    public List<ResepDetailModel> getDetailByResepId(int resepId) {
+        return resepDetailDAO.getDetailByResepId(resepId);
+    }
+
+    public boolean tambahDetail(int resepId, int bahanBakuId, double jumlah, String satuan) {
+        // Validasi input
+        if (jumlah <= 0) {
+            return false;
+        }
+        
+        return resepDetailDAO.tambahDetail(resepId, bahanBakuId, jumlah, satuan);
+    }
+
+    public boolean hapusDetail(int detailId) {
+        return resepDetailDAO.hapusDetail(detailId);
+    }
+
+    public List<ResepModel> getAllReseps() {
+        return resepDAO.getAllReseps();
     }
 
 }

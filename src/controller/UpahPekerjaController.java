@@ -1,79 +1,117 @@
 package controller;
 
 import model.UpahPekerjaModel;
+import model.*;
 import view.UpahPekerja2;
-import view.DetailPekerja2;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import model.User;
 import view.DataPekerja2;
 
 public class UpahPekerjaController {
-    private UpahPekerjaModel model;
-    private UpahPekerja2 view;
     private Connection conn;
+    private UpahPekerja2 view;
+    private UpahPekerjaModel model;
     private User user;
-    
-    public UpahPekerjaController(Connection conn, UpahPekerja2 view) {
+
+    public UpahPekerjaController(Connection conn, UpahPekerja2 view, User user) {
         this.conn = conn;
         this.view = view;
+        this.user = user;
         this.model = new UpahPekerjaModel(conn);
-        
+
         initController();
         loadData();
     }
-    
+
     private void initController() {
-        // Handle button click
         view.getBtnDaftarPekerja().addActionListener(e -> {
-            new view.DataPekerja2(user).setVisible(true);
-        });
-        
-        // Handle table button clicks
-        view.getTabelUpah().getModel().addTableModelListener(e -> {
-            if (e.getColumn() == 7 && e.getType() == TableModelEvent.UPDATE) {
-                int idPekerja = (int) view.getTabelUpah().getValueAt(e.getFirstRow(), 1);
-                showDetailPekerja(idPekerja);
-            }
-        });
-    }
+    view.setEnabled(false); // Nonaktifkan sementara
     
+    DataPekerja2 daftarView = new DataPekerja2(user);
+    daftarView.addWindowListener(new WindowAdapter() {
+        @Override
+        public void windowClosed(WindowEvent e) {
+            view.setEnabled(true); // Aktifkan kembali
+            view.toFront(); // Bawa ke depan
+        }
+    });
+    
+    new DataPekerjaController(daftarView);
+    daftarView.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    daftarView.setVisible(true);
+});
+
+        // Action untuk combo box filter utama
+        view.getFilterComboBox().addActionListener(e -> {
+            updateFilterDetails();
+            loadData();
+        });
+
+        // Action untuk filter detail (minggu, bulan, tahun)
+        view.getWeekComboBox().addActionListener(e -> loadData());
+        view.getMonthComboBox().addActionListener(e -> loadData());
+        view.getYearComboBox().addActionListener(e -> loadData());
+    }
+
+    private void updateFilterDetails() {
+        // Sembunyikan semua filter detail terlebih dahulu
+        view.getWeekComboBox().setVisible(false);
+        view.getMonthComboBox().setVisible(false);
+        view.getYearComboBox().setVisible(false);
+
+        // Tampilkan hanya yang relevan berdasarkan filter utama
+        String selectedFilter = (String) view.getFilterComboBox().getSelectedItem();
+        switch (selectedFilter.toLowerCase()) {
+            case "mingguan":
+                view.getWeekComboBox().setVisible(true);
+                view.getMonthComboBox().setVisible(true);
+                view.getYearComboBox().setVisible(true);
+                break;
+            case "bulanan":
+                view.getMonthComboBox().setVisible(true);
+                view.getYearComboBox().setVisible(true);
+                break;
+            case "tahunan":
+                view.getYearComboBox().setVisible(true);
+                break;
+            // Untuk harian tidak perlu menampilkan filter tambahan
+        }
+    }
+
     private void loadData() {
         try {
-            List<Object[]> data = model.getDataUpah();
+            // Ambil nilai dari filter utama
+            String selectedFilter = (String) view.getFilterComboBox().getSelectedItem();
+            UpahPekerjaModel.FilterPeriod filter = UpahPekerjaModel.FilterPeriod.valueOf(selectedFilter.toUpperCase());
+
+            // Ambil nilai dari filter detail (bisa null jika tidak digunakan)
+            Integer week = null;
+            Integer month = null;
+            Integer year = null;
+
+            if (view.getWeekComboBox().isVisible()) {
+                week = (Integer) view.getWeekComboBox().getSelectedItem();
+            }
+            if (view.getMonthComboBox().isVisible()) {
+                month = view.getMonthComboBox().getSelectedIndex() + 1; // Konversi ke angka bulan (1-12)
+            }
+            if (view.getYearComboBox().isVisible()) {
+                year = (Integer) view.getYearComboBox().getSelectedItem();
+            }
+
+            // Ambil data dari model
+            List<Object[]> data = model.getDataUpah(filter, week, month, year);
+
+            // Tampilkan data di view
             view.tampilkanData(data);
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(view, 
-                "Gagal memuat data: " + e.getMessage(),
-                "Error", 
-                JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(view, "Gagal memuat data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
-    
-    private void showDetailPekerja(int idPekerja) {
-    try {
-        Object[] DataPekerja = model.getDetailPekerja(idPekerja);
-        if (DataPekerja != null) {
-            DetailPekerja2 detailView = new DetailPekerja2(idPekerja);
-            detailView.setVisible(true);
-        } else {
-            JOptionPane.showMessageDialog(view, 
-                "Data pekerja tidak ditemukan", 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE);
-        }
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(view, 
-            "Gagal memuat detail: " + e.getMessage(),
-            "Error", 
-            JOptionPane.ERROR_MESSAGE);
-        e.printStackTrace();
-    }
-}
 }

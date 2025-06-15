@@ -1,6 +1,5 @@
 package model;
 
-import model.User;
 import java.sql.*;
 
 public class LoginUser {
@@ -9,16 +8,20 @@ public class LoginUser {
             String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
-            stmt.setString(2, password); // asumsi password tidak di-hash
+            stmt.setString(2, password);
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return new User(rs.getString("username"), rs.getString("password"));
+                // Ambil semua field termasuk nama
+                return new User(
+                    rs.getString("nama"),    // Tambahkan ini
+                    rs.getString("username"),
+                    rs.getString("password")
+                );
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null; // kalau tidak ditemukan
+        return null;
     }
 }
-

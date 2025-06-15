@@ -14,8 +14,8 @@ public class Resep extends JFrame {
     private JTable table;
     private DefaultTableModel tableModel;
     private ResepController controller;
-    private HamburgerMenu hamburgerMenu;
     private User currentUser;
+    private HamburgerMenu hamburgerMenu;
 
     public Resep(User user) {
         this.currentUser = user;
@@ -39,10 +39,9 @@ public class Resep extends JFrame {
     mainPanel.setBackground(new Color(245, 245, 245));
     setContentPane(mainPanel);
 
-    // Hamburger Menu
-    hamburgerMenu = new HamburgerMenu(mainPanel, currentUser);
-    mainPanel.add(hamburgerMenu.getNavBar(), BorderLayout.NORTH);
-    mainPanel.add(hamburgerMenu.getDrawerPanel(), BorderLayout.WEST);
+    // Navbar dan drawer
+        hamburgerMenu = new HamburgerMenu(this, currentUser);
+        getContentPane().add(hamburgerMenu.getNavBar(), BorderLayout.NORTH);
 
     // Konten utama
     JPanel contentPanel = new JPanel(new BorderLayout());
@@ -139,14 +138,11 @@ public class Resep extends JFrame {
     buttonPanel.setBackground(Color.WHITE);
     buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
-    JButton tambahBtn = createFlatButton("+ Tambah Resep", new Color(0, 150, 136));
     JButton detailBtn = createFlatButton("Lihat Detail", new Color(96, 125, 139));
 
-    tambahBtn.addActionListener(e -> tambahResep());
     detailBtn.addActionListener(e -> bukaDetailResep());
 
     buttonPanel.add(detailBtn);
-    buttonPanel.add(tambahBtn);
     contentPanel.add(buttonPanel, BorderLayout.SOUTH);
 
     mainPanel.add(contentPanel, BorderLayout.CENTER);
@@ -189,32 +185,6 @@ public class Resep extends JFrame {
             }
         };
         worker.execute();
-    }
-
-    private void tambahResep() {
-        JTextField namaField = new JTextField();
-        namaField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        
-        JPanel inputPanel = new JPanel(new GridLayout(1, 2, 10, 10));
-        inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        inputPanel.add(new JLabel("Nama Produk:"));
-        inputPanel.add(namaField);
-        
-        int result = JOptionPane.showConfirmDialog(this, inputPanel, 
-            "Tambah Resep Baru", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        
-        if (result == JOptionPane.OK_OPTION && !namaField.getText().isEmpty()) {
-            if (controller.tambahResep(namaField.getText())) {
-                loadResep();
-                JOptionPane.showMessageDialog(this, 
-                    "<html><b>Resep berhasil ditambahkan!</b></html>", 
-                    "Sukses", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this, 
-                    "<html>Gagal menambahkan resep.<br>Pastikan nama tidak duplikat.</html>", 
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
     }
     
     private void bukaDetailResep() {

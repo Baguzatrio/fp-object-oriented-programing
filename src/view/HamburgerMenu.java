@@ -7,215 +7,214 @@ import controller.NavbarController;
 import model.User;
 
 public class HamburgerMenu {
-    private JPanel drawerPanel;
-    private JButton hamburgerButton;
+    private JFrame parentFrame;
+    private JPanel navBar, drawerPanel, glassPane;
     private boolean drawerOpen = false;
-    private JPanel parentPanel;
-    private JPanel navBar;
     private NavbarController navCon;
     private User currentUser;
+    private JLayeredPane layeredPane;
+    private JButton hamburger;
 
-    public HamburgerMenu(JPanel parentPanel, User user) {
-        this.parentPanel = parentPanel;
+    public HamburgerMenu(JFrame parentFrame, User user) {
+        this.parentFrame = parentFrame;
         this.currentUser = user;
-        this.navCon = new NavbarController();
+        this.navCon = new NavbarController(parentFrame);
+
         createNavBar();
         createDrawer();
-        
-        // Pastikan z-order benar
-        parentPanel.setComponentZOrder(navBar, 0);
-        parentPanel.setComponentZOrder(drawerPanel, 1);
+        createGlassPane();
+
+        // Tambahkan navBar ke atas konten utama
+        parentFrame.getContentPane().add(navBar, BorderLayout.NORTH);
+
+        // Tambahkan drawer & glassPane ke layered pane
+        layeredPane = parentFrame.getLayeredPane();
+        layeredPane.add(drawerPanel, JLayeredPane.MODAL_LAYER);
+        layeredPane.add(glassPane, JLayeredPane.PALETTE_LAYER);
+
+        // Resize mengikuti parent frame
+        parentFrame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                updateSizes();
+            }
+        });
+
+        updateSizes(); // Panggil awal agar ukuran benar
     }
 
     private void createNavBar() {
-    // Buat panel navbar
-    navBar = new JPanel();
-    navBar.setBackground(new Color(51, 0, 204)); // Warna biru tua
-    navBar.setLayout(new BorderLayout());
-    navBar.setPreferredSize(new Dimension(parentPanel.getWidth(), 60));
-    
-    // Panel untuk tombol hamburger (agar bisa di-align ke kiri)
-    JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
-    leftPanel.setOpaque(false);
-    
-    // BUAT TOMBOL HAMBURGER YANG PASTI TERLIHAT
-    hamburgerButton = new JButton();
-    hamburgerButton.setText("≡"); // Alternatif: "☰" atau "≡" atau "|||"
-    hamburgerButton.setFont(new Font("Segoe UI", Font.PLAIN, 30)); // Ukuran lebih besar
-    hamburgerButton.setForeground(Color.WHITE);
-    hamburgerButton.setBackground(new Color(51, 0, 204));
-    hamburgerButton.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-    hamburgerButton.setFocusPainted(false);
-    hamburgerButton.setContentAreaFilled(false);
-    
-    // Tambahkan border sementara untuk debugging
-    hamburgerButton.setBorder(BorderFactory.createLineBorder(Color.RED));
-    
-    hamburgerButton.addActionListener(e -> toggleDrawer());
-    
-    leftPanel.add(hamburgerButton);
-    navBar.add(leftPanel, BorderLayout.WEST);
-    
-    // Tambahkan judul aplikasi di tengah
-    JLabel titleLabel = new JLabel("ILBTRACE");
-    titleLabel.setForeground(Color.WHITE);
-    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-    titleLabel.setHorizontalAlignment(JLabel.CENTER);
-    navBar.add(titleLabel, BorderLayout.CENTER);
-    
-    parentPanel.add(navBar, BorderLayout.NORTH);
-}
+        navBar = new JPanel(new BorderLayout());
+        navBar.setBackground(new Color(51, 0, 204));
+        navBar.setPreferredSize(new Dimension(parentFrame.getWidth(), 60));
+
+        hamburger = new JButton("≡");
+        hamburger.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        hamburger.setFocusPainted(false);
+        hamburger.setContentAreaFilled(false);
+        hamburger.setForeground(Color.WHITE);
+        hamburger.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        hamburger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        hamburger.addActionListener(e -> toggleDrawer());
+
+        JLabel title = new JLabel("ILBTRACE", SwingConstants.CENTER);
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
+
+        navBar.add(hamburger, BorderLayout.WEST);
+        navBar.add(title, BorderLayout.CENTER);
+    }
 
     private void createDrawer() {
-        // Create drawer panel
-        drawerPanel = new JPanel();
-        drawerPanel.setLayout(new BorderLayout());
-        drawerPanel.setBackground(new Color(240, 240, 240));
-        
-        // Atur ukuran drawer agar full height
-        drawerPanel.setBounds(0, 0, 200, 
-                           parentPanel.getHeight());
-        drawerPanel.setVisible(false);
-        
-        // Header with user info and close button
-        JPanel headerPanel = new JPanel();
-        headerPanel.setBackground(new Color(51, 0, 204));
-        headerPanel.setPreferredSize(new Dimension(250, 100));
-        headerPanel.setLayout(new BorderLayout());
-        
-        // Panel untuk nama dan username
-        JPanel userInfoPanel = new JPanel();
-        userInfoPanel.setLayout(new BoxLayout(userInfoPanel, BoxLayout.Y_AXIS));
-        userInfoPanel.setOpaque(false);
-        userInfoPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        
-        // Label nama lengkap
-        JLabel fullNameLabel = new JLabel(currentUser.getNama());
-        fullNameLabel.setForeground(Color.WHITE);
-        fullNameLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        
-        // Label username
-        JLabel usernameLabel = new JLabel("@" + currentUser.getUsername());
-        usernameLabel.setForeground(new Color(200, 200, 200));
-        usernameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        
-        userInfoPanel.add(fullNameLabel);
-        userInfoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        userInfoPanel.add(usernameLabel);
-        
-        headerPanel.add(userInfoPanel, BorderLayout.CENTER);
-        drawerPanel.add(headerPanel, BorderLayout.NORTH);
-        
-        // Menu items
-        JPanel menuPanel = new JPanel();
-       
-        menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
-        menuPanel.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5));
-        menuPanel.setBackground(new Color(240, 240, 240));
-        
-        String[] menuItems = {
-            "Dashboard", 
-            "Produk Olahan", 
-            "Produksi", 
-            "Pemasaran", 
-            "Bahan Baku", 
-            "Penyimpanan Resep", 
-            "Perhitungan Upah", 
-            "Laporan Keuangan"
-        };
-        
-        for (String item : menuItems) {
-            JButton menuButton = new JButton(item);
-            menuButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-            menuButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-            menuButton.setBackground(Color.WHITE);
-            menuButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            menuButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(200, 200, 200)),
-                BorderFactory.createEmptyBorder(10, 15, 10, 15)
-            ));
-            menuButton.addMouseListener(new MouseAdapter() {
+    drawerPanel = new JPanel(new BorderLayout());
+    drawerPanel.setOpaque(false);
+    drawerPanel.setVisible(false);
+    
+    // Panel utama drawer dengan gradasi
+    JPanel drawerContent = new JPanel(new BorderLayout()) {
         @Override
-        public void mouseEntered(MouseEvent e) {
-            menuButton.setBackground(new Color(200, 230, 255)); // Warna biru muda
-            menuButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        }
-        
-        @Override
-        public void mouseExited(MouseEvent e) {
-            menuButton.setBackground(Color.WHITE);
-            menuButton.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-        }
-    });
-            // Tambahkan action untuk navigasi
-            menuButton.addActionListener(e -> {
-                navCon.navigateTo(item, currentUser);
-                toggleDrawer(); // Tutup drawer setelah navigasi
-            });
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             
-            menuPanel.add(menuButton);
-            menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+            Color color1 = new Color(230, 240, 255);
+            Color color2 = new Color(200, 220, 255);
+            GradientPaint gp = new GradientPaint(0, 0, color1, getWidth(), getHeight(), color2);
+            g2d.setPaint(gp);
+            g2d.fillRect(0, 0, getWidth(), getHeight());
         }
-        
-        // Tambahkan scroll pane untuk responsivitas
-        JScrollPane scrollPane = new JScrollPane(menuPanel);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        
-        drawerPanel.add(scrollPane, BorderLayout.CENTER);
-        
-        // Footer with logout button
-        JPanel footerPanel = new JPanel();
-        footerPanel.setLayout(new BorderLayout());
-        footerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        footerPanel.setBackground(new Color(240, 240, 240));
-        
-        JButton logoutButton = new JButton("Logout");
-        logoutButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        logoutButton.addActionListener(e -> System.exit(0));
-        footerPanel.add(logoutButton, BorderLayout.CENTER);
-        
-        drawerPanel.add(footerPanel, BorderLayout.SOUTH);
-        
-        // Add drawer to the parent panel
-        parentPanel.add(drawerPanel);
+    };
+    drawerContent.setPreferredSize(new Dimension(250, parentFrame.getHeight()));
+
+    // HEADER (tetap sama seperti sebelumnya)
+    JPanel header = new JPanel(new BorderLayout());
+    header.setPreferredSize(new Dimension(250, 120));
+    header.setBackground(new Color(51, 102, 204));
+    header.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    
+    JPanel userInfo = new JPanel();
+    userInfo.setLayout(new BoxLayout(userInfo, BoxLayout.Y_AXIS));
+    userInfo.setOpaque(false);
+
+    JLabel nameLabel = new JLabel(currentUser.getNama());
+    nameLabel.setForeground(Color.WHITE);
+    nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+    nameLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+
+    JLabel usernameLabel = new JLabel("@" + currentUser.getUsername());
+    usernameLabel.setForeground(new Color(230, 230, 230));
+    usernameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+    userInfo.add(nameLabel);
+    userInfo.add(usernameLabel);
+    header.add(userInfo, BorderLayout.CENTER);
+
+    // MENU - Perbaikan di bagian ini
+    JPanel content = new JPanel();
+    content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+    content.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15)); // Padding disesuaikan
+    content.setOpaque(false);
+
+    String[] menuItems = {
+        "Dashboard", "Session", "Produk Olahan", "Produksi", "Pemasaran",
+        "Bahan Baku", "Penyimpanan Resep", "Upah Pekerja", "Pengeluaran Lain", "Laporan Keuangan"
+    };
+
+    for (String item : menuItems) {
+        JButton btn = new JButton(item);
+        btn.setMaximumSize(new Dimension(220, 40));
+        btn.setPreferredSize(new Dimension(220, 40));
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        btn.setHorizontalAlignment(SwingConstants.LEFT); // Teks rata kiri
+        btn.setFocusPainted(false);
+        btn.setBackground(new Color(255, 255, 255, 150));
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        btn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 220, 255)),
+            BorderFactory.createEmptyBorder(5, 15, 5, 15) // Padding kiri-kanan diperbesar
+        ));
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.addActionListener(e -> {
+            navCon.navigateTo(item, currentUser);
+            toggleDrawer();
+        });
+        content.add(btn);
+        content.add(Box.createRigidArea(new Dimension(0, 8))); // Spasi antar tombol
     }
 
-public void toggleDrawer() {
-    drawerOpen = !drawerOpen;
-    
-    if (drawerOpen) {
-        // Buka drawer dan tutup konten utama
-        drawerPanel.setVisible(true);
-        parentPanel.getParent().setEnabled(false); // Nonaktifkan interaksi dengan konten utama
-        animateDrawer(250, 0);
-    } else {
-        // Tutup drawer dan aktifkan konten utama
-        animateDrawer(0, 250, () -> {
-            drawerPanel.setVisible(false);
-            parentPanel.getParent().setEnabled(true);
+    // Tambahkan panel pembungkus untuk memberikan margin
+    JPanel wrapper = new JPanel(new BorderLayout());
+    wrapper.setOpaque(false);
+    wrapper.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+    wrapper.add(content, BorderLayout.NORTH);
+
+    JScrollPane scroll = new JScrollPane(wrapper);
+    scroll.setBorder(null);
+    scroll.setOpaque(false);
+    scroll.getViewport().setOpaque(false);
+    scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    scroll.getViewport().setBorder(null); // Hilangkan border viewport
+
+    // FOOTER
+    JPanel footer = new JPanel(new BorderLayout());
+    footer.setOpaque(false);
+    footer.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+
+    JButton logoutBtn = new JButton("Logout");
+    logoutBtn.setFocusPainted(false);
+    logoutBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    logoutBtn.setForeground(Color.WHITE);
+    logoutBtn.setBackground(new Color(51, 102, 204));
+    logoutBtn.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(255, 255, 255, 100)),
+        BorderFactory.createEmptyBorder(8, 20, 8, 20)
+    ));
+    logoutBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    logoutBtn.addActionListener(e -> navCon.logout());
+    footer.add(logoutBtn, BorderLayout.CENTER);
+
+    drawerContent.add(header, BorderLayout.NORTH);
+    drawerContent.add(scroll, BorderLayout.CENTER);
+    drawerContent.add(footer, BorderLayout.SOUTH);
+
+    drawerPanel.add(drawerContent);
+}
+
+    private void createGlassPane() {
+        glassPane = new JPanel();
+        glassPane.setOpaque(false);
+        glassPane.setVisible(false);
+        glassPane.setBounds(0, 0, parentFrame.getWidth(), parentFrame.getHeight());
+
+        glassPane.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                toggleDrawer();
+            }
         });
     }
+
+    private void updateSizes() {
+    int width = parentFrame.getWidth();
+    int height = parentFrame.getHeight();
+
+    navBar.setPreferredSize(new Dimension(width, 60));
+    navBar.revalidate();
+
+    // FIX: Tetap pertahankan width drawer 250px
+    drawerPanel.setBounds(0, 0, 250, height); // <-- Ubah width tetap 250
+    
+    glassPane.setBounds(0, 0, width, height);
 }
 
-private void animateDrawer(int start, int end, Runnable onFinish) {
-    new Thread(() -> {
-        int step = (start < end) ? 15 : -15;
-        for (int i = start; (step > 0) ? i <= end : i >= end; i += step) {
-            final int pos = i;
-            SwingUtilities.invokeLater(() -> {
-                drawerPanel.setBounds(-pos, navBar.getHeight(), 250, 
-                                   parentPanel.getHeight() - navBar.getHeight());
-            });
-            try { Thread.sleep(5); } catch (Exception e) {}
-        }
-        SwingUtilities.invokeLater(onFinish);
-    }).start();
-}
-
-private void animateDrawer(int start, int end) {
-    animateDrawer(start, end, () -> {});
-}
+    public void toggleDrawer() {
+        drawerOpen = !drawerOpen;
+        drawerPanel.setVisible(drawerOpen);
+        glassPane.setVisible(drawerOpen);
+        drawerPanel.revalidate();
+        drawerPanel.repaint();
+    }
 
     public JPanel getNavBar() {
         return navBar;
@@ -224,5 +223,4 @@ private void animateDrawer(int start, int end) {
     public JPanel getDrawerPanel() {
         return drawerPanel;
     }
-
 }

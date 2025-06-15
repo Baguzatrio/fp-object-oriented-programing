@@ -13,8 +13,8 @@ public class BahanBakuController {
         dao = new BahanBakuDAO();
     }
 
-    public List<BahanBakuModel> getAllBahan() {
-        return dao.getAll();
+    public List<BahanBakuModel> getAllBahan(String filterNama) {
+        return dao.getAll(filterNama);
     }
 
     public boolean tambahBahan(BahanBakuModel bahan) {
@@ -22,5 +22,9 @@ public class BahanBakuController {
             return false;
         }
         return dao.insert(bahan);
+    }
+    
+    public boolean reduceStock(int id, double amount) {
+        return dao.reduceStock(id, amount);
     }
 }

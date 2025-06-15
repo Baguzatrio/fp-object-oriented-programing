@@ -2,10 +2,22 @@ package view;
 
 import controller.LoginController;
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import javax.swing.*;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
+import javax.swing.plaf.basic.BasicButtonUI;
 import model.User;
 
 public class Login extends JFrame {
@@ -57,6 +69,9 @@ public class Login extends JFrame {
         jButton2 = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
 
+        styleButton(jButton1, new Color(0, 174, 239), new Color(135, 206, 235)); 
+        styleButton(jButton2, new Color(0, 174, 239), new Color(135, 206, 235)); 
+        
         jCheckBoxMenuItem1.setSelected(true);
         jCheckBoxMenuItem1.setText("jCheckBoxMenuItem1");
 
@@ -203,6 +218,97 @@ public class Login extends JFrame {
         pack();
     }
 
+    private void styleButton(JButton button, Color startColor, Color endColor) {
+        button.setOpaque(false);
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        
+        button.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                // Hover effect - lighter colors
+                button.setBackground(blendColors(startColor, endColor, 0.7f));
+                button.repaint();
+            }
+
+            public void mouseExited(MouseEvent e) {
+                // Normal state
+                button.setBackground(blendColors(startColor, endColor, 0.5f));
+                button.repaint();
+            }
+        });
+
+        // Custom paint for gradient effect
+        button.setUI(new BasicButtonUI() {
+            @Override
+            public void paint(Graphics g, JComponent c) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                JButton btn = (JButton) c;
+                ButtonModel model = btn.getModel();
+
+                // Gradient background
+                GradientPaint gp;
+                if (model.isRollover()) {
+                    gp = new GradientPaint(0, 0, blendColors(startColor, endColor, 0.7f),
+                                     0, btn.getHeight(), blendColors(endColor, startColor, 0.7f));
+                } else {
+                    gp = new GradientPaint(0, 0, blendColors(startColor, endColor, 0.5f),
+                                     0, btn.getHeight(), blendColors(endColor, startColor, 0.5f));
+                }
+
+                g2.setPaint(gp);
+                g2.fillRoundRect(0, 0, btn.getWidth(), btn.getHeight(), 8, 8);
+
+                // Border
+                g2.setColor(new Color(255, 255, 255, 80));
+                g2.drawRoundRect(0, 0, btn.getWidth()-1, btn.getHeight()-1, 8, 8);
+
+                // Text
+                g2.setColor(btn.getForeground());
+                FontMetrics fm = g2.getFontMetrics();
+                Rectangle2D r = fm.getStringBounds(btn.getText(), g2);
+                int x = (btn.getWidth() - (int) r.getWidth()) / 2;
+                int y = (btn.getHeight() - (int) r.getHeight()) / 2 + fm.getAscent();
+                g2.drawString(btn.getText(), x, y);
+
+                g2.dispose();
+            }
+        });
+    }
+
+    private Color blendColors(Color c1, Color c2, float ratio) {
+        if (ratio > 1f) ratio = 1f;
+        else if (ratio < 0f) ratio = 0f;
+        float iRatio = 1.0f - ratio;
+        
+        int i1 = c1.getRGB();
+        int i2 = c2.getRGB();
+        
+        int a1 = (i1 >> 24 & 0xff);
+        int r1 = ((i1 & 0xff0000) >> 16);
+        int g1 = ((i1 & 0xff00) >> 8);
+        int b1 = (i1 & 0xff);
+        
+        int a2 = (i2 >> 24 & 0xff);
+        int r2 = ((i2 & 0xff0000) >> 16);
+        int g2 = ((i2 & 0xff00) >> 8);
+        int b2 = (i2 & 0xff);
+        
+        int a = (int)((a1 * iRatio) + (a2 * ratio));
+        int r = (int)((r1 * iRatio) + (r2 * ratio));
+        int g = (int)((g1 * iRatio) + (g2 * ratio));
+        int b = (int)((b1 * iRatio) + (b2 * ratio));
+        
+        return new Color(a << 24 | r << 16 | g << 8 | b);
+    }
+    
     public String getUsername() {
         return jTextField1.getText();
     }
@@ -228,7 +334,7 @@ public class Login extends JFrame {
         this.dispose();
     }
     
-    public void goToPage2() {
+    public void goToRegister() {
         new Register().setVisible(true);
         this.dispose();
     }
@@ -243,32 +349,5 @@ public class Login extends JFrame {
 
         addLoginnListener(new LoginController(this).new LoginListener());
         addRegisterListener(new LoginController(this).new RegisterListener());
-    }
-    
-    public static void main(String args[]) {
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Login.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Login.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Login.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Login.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                Login view = new Login();
-                LoginController controller = new LoginController(view);
-                view.setVisible(true);
-            }
-        });
     }
 }
